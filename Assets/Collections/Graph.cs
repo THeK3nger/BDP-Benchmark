@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System;
 
-namespace RoomOfRequirement
+namespace RoomOfRequirement.Generic
 {
 
 /// <summary>

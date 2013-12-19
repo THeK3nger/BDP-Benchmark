@@ -3,7 +3,7 @@ using System.Collections;
 using System.Runtime.Serialization;
 using System;
 
-namespace RoomOfRequirement
+namespace RoomOfRequirement.Generic
 {
 	[Serializable]
 	public class UndirectedGraph<TNode> : Graph<TNode>, ISerializable

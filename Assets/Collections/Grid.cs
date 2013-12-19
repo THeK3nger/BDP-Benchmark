@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace RoomOfRequirement
+namespace RoomOfRequirement.Generic
 {
 
 /// <summary>

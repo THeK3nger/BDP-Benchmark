@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System;
 
-namespace RoomOfRequirement
+namespace RoomOfRequirement.Generic
 {
 	[Serializable]
 	public class UndirectedLabeledGraph<TNode,TLVertex,TLEdges> : UndirectedGraph<TNode>, ISerializable
