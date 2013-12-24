@@ -12,9 +12,9 @@ public class RandomCollection {
 	/// </summary>
 	/// <param name="list">List.</param>
 	/// <typeparam name="T">The 1st type parameter.</typeparam>
-	public static List<T> Shuffle<T>(List<T> list) {
+	public static List<T> ShuffleCopy<T>(List<T> list) {
 		var resultList = new List<T>(list);
-		ShuffleWithSideEffect(resultList);
+		Shuffle(resultList);
 		return resultList;
 	}
 
@@ -23,7 +23,7 @@ public class RandomCollection {
 	/// </summary>
 	/// <param name="list">List.</param>
 	/// <typeparam name="T">The 1st type parameter.</typeparam>
-	public static void ShuffleWithSideEffect<T>(List<T> list) {
+	public static void Shuffle<T>(List<T> list) {
 		int n = list.Count;
 		while (n>1) {
 			int k = Random.Range(0,n-1);

@@ -53,7 +53,7 @@ namespace RoomOfRequirement.AI.Data
 			if (parent != null) {
 				return parent.Get<T>(key);
 			}
-			return null;
+			return default(T);
 		}
 
 		/// <summary>
