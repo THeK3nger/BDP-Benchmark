@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using RoomOfRequirement;
 
 public interface IMapBelief : IHasNeighbours<MapSquare> {
 

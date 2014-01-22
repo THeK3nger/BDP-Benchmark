@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Reflection;
 using System;
 using UnityEngine;
+using RoomOfRequirement.Generic;
 
 /// <summary>
 /// Contains and manages a 2D grid map.
