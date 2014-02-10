@@ -1,70 +1,124 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System;
 using RoomOfRequirement.Search;
+using System.IO;
+using System.Linq;
 
+[RequireComponent(typeof(Pathfinder))]
 public class PathfindTester : MonoBehaviour {
-
+	
 	public int Seed;
-	public Pathfinder ThePathfinder;
 	[Range(0.0f,1.0f)]
 	public float InconsistencyRate;
 	public int NumberOfRuns;
 	public bool AvoidSameAreaPath;
-
-
+	
 	[Range(1,1000)]
 	public int ScrambleRate;
+	public int ScrambleAmount = 2;
 
 	[Range(1,1000)]
 	public int BeliefResetRate;
+
+	Pathfinder ThePathfinder;
 
 	MapSquare currentPos;
 	MapSquare targetPos;
 
 	System.Random r;
 
+	GUIText LocalProg;
+	GUIText GlobalProg;
+
 	//int runs = 0;
 	int pathfindingCall = 0;
+
+	List<TextAsset> allMaps = new List<TextAsset>();
+
+	void Awake() {
+		ThePathfinder = gameObject.GetComponent<Pathfinder>();
+	}
 
 	// Use this for initialization
 	void Start () {
 		// Set the seed to allow multiple test.
 		r = new System.Random(Seed);
+		LocalProg = GameObject.Find("LocalProg").GetComponent<GUIText>();
+		/* GUI */
+		GlobalProg = GameObject.Find("GlobalProg").GetComponent<GUIText>();
 		AStar.CollectProfiling = true;
+		/*     */
+		LoadAllMaps();
 		StartCoroutine(MainNHTestLoop());
 	}
-	
-	// Update is called once per frame
-	void Update () {
+
+	/// <summary>
+	/// Loads all maps into memory.
+	/// </summary>
+	void LoadAllMaps() {
+		UnityEngine.Object[] allMapObj = Resources.LoadAll("Maps");
+		if (allMapObj.Length == 0) {
+			Debug.LogError("No Map Loaded in PathfinderTest");
+		}
+		foreach (UnityEngine.Object o in allMapObj) {
+			allMaps.Add((TextAsset) o);
+		}
+		Debug.Log(String.Format("{0} maps loaded!",allMaps.Count));
 	}
 
+	/// <summary>
+	/// Main test loop. (Coroutine)
+	/// </summary>
 	public IEnumerator MainNHTestLoop() {
-		BenchmarkData bd = new BenchmarkData();
-		bd.AgentType = ThePathfinder.AgentBelief.ToString();
-		bd.BeliefMemoryUsed = ThePathfinder.AgentBelief.MemoryByteUsed();
-		bd.ScrambleRate = ScrambleRate;
-		bd.IncosistencyRate = InconsistencyRate;
-		int counter = 0;
+		int gcount = 0;
+		foreach (TextAsset txa in allMaps) {
+			ThePathfinder.AgentBelief.ResetBelieves();
+			gcount++;
+			/* Update the map and recompute the map. */
+			ThePathfinder.GameMap.MapFile = txa;
+			ThePathfinder.GameMap.ComputeMap();
+			/* ************************************* */
+			/* BENCHMARK */
+			BenchmarkData bd = new BenchmarkData();
+			bd.AgentType = ThePathfinder.AgentBelief.ToString();
+			bd.BeliefMemoryUsed = ThePathfinder.AgentBelief.MemoryByteUsed();
+			bd.ScrambleRate = ScrambleRate;
+			bd.IncosistencyRate = InconsistencyRate;
+			bd.MapFile = txa.name;
+			/* ******** */
+			int counter = 0;
+			/* GUI */
+			GlobalProg.text = String.Format("Global Progress: {0:0.0}",(float) gcount/ (float) allMaps.Count);
+			/* *** */
+			RandomizeWorldPortals();
 		while (counter < NumberOfRuns) {
+			/* GUI */
+			LocalProg.text = String.Format("Local Progress: {0:0.0}",(float) counter/ (float) NumberOfRuns);
+			/* *** */
 			Debug.Log("Iteration " + counter);
-			if (counter % ScrambleRate == 0) RandomizeWorldPortals();
+			if (counter % ScrambleRate == 0) RandomizeWorldPortals3();
 			if (counter % BeliefResetRate == 0) ThePathfinder.AgentBelief.CleanBelieves();
-			SingleRunData srd = new SingleRunData();
 			currentPos = RandomFreePosition();
 			targetPos = RandomFreePosition();
+			// Avoid Same Area Paths.
 			if (ThePathfinder.GameMap.Areas[currentPos.x,currentPos.y] == ThePathfinder.GameMap.Areas[targetPos.x,targetPos.y]
 			    && AvoidSameAreaPath) {
 				continue;
 			}
 //			Debug.Log("FROM: " + currentPos + " TO: " + targetPos);
+			/* BENCHMARK */
+			SingleRunData srd = new SingleRunData();
 			srd.StartingPoint = currentPos.ToString();
 			srd.TargetPoint = targetPos.ToString();
-			UpdateAllPortalInArea(currentPos,srd);
+			/* ********* */
+			//UpdateAllPortalInArea(currentPos,srd);
 			while (currentPos != targetPos) {
 				if (ThePathfinder.AgentBelief.Hierarchical) ThePathfinder.AgentBelief.CurrentTarget = targetPos;
 				Path<MapSquare> path = ThePathfinder.PathFind(currentPos,targetPos);
+				/* BENCHMARK */
 				srd.PathfindingTicks += AStar.ElapsedTime;
 				srd.ExploredNodes += AStar.ExpandedNodes;
 				srd.MaxMemoryUsage = Mathf.Max( srd.MaxMemoryUsage, AStar.MaxMemoryQueue);
@@ -76,6 +130,7 @@ public class PathfindTester : MonoBehaviour {
 					break;
 				}
 				srd.PathFound = true;
+				/* ********* */
 				List<MapSquare> pathList = new List<MapSquare>(path);
 				pathList.Reverse();
 				if (ThePathfinder.AgentBelief.Hierarchical) {
@@ -90,10 +145,9 @@ public class PathfindTester : MonoBehaviour {
 			}
 			counter++;
 			bd.RunsData.Add(srd);
-			ThePathfinder.GameMap.DrawAreaMap();
-			ThePathfinder.GameMap.DrawMap();
 		}
 		bd.PrintToFile();
+		}
 		Debug.Log("TEST COMPLETED");
 	}
 
@@ -118,7 +172,7 @@ public class PathfindTester : MonoBehaviour {
 		return result;
 	}
 
-	public IEnumerator ExecutePath(List<MapSquare> pathList, SingleRunData srd) {
+	public IEnumerator ExecutePath(IList<MapSquare> pathList, SingleRunData srd) {
 		srd.PathLenght = 0;
 		bool mapInconsistency = false;
 		bool pathCompleted = false;
@@ -127,10 +181,10 @@ public class PathfindTester : MonoBehaviour {
 		while (!pathCompleted && !mapInconsistency) {
 			nextPos = pathList[stepIndex];
 			if (!ThePathfinder.GameMap.IsFree(nextPos)) {
-//				Debug.Log("Path Inconsistency");
-//				Debug.Log(currentPos + " " + nextPos);
-				mapInconsistency = true;
-				srd.UpdateTicks += MethodProfiler.ProfileMethod(ThePathfinder.AgentBelief.UpdateBelief,nextPos,false);
+				//mapInconsistency = true;
+				//if (ThePathfinder.AgentBelief.Original.PortalSquares.ContainsKey(nextPos)) {
+					srd.UpdateTicks += MethodProfiler.ProfileMethod(ThePathfinder.AgentBelief.UpdateBelief,nextPos,false);
+				//}
 				break;
 			}
 			int nextPosArea = ThePathfinder.GameMap.Areas[nextPos.x,nextPos.y];
@@ -142,7 +196,7 @@ public class PathfindTester : MonoBehaviour {
 			currentPos = nextPos;
 			srd.PathLenght++;
 			if (currentPos == targetPos) { 
-				pathCompleted = true; 
+				//pathCompleted = true; 
 				break; 
 			}
 			stepIndex++;
@@ -176,6 +230,17 @@ public class PathfindTester : MonoBehaviour {
 				ThePathfinder.GameMap.SetPortalGroup(pg,!currentState,pg.LinkedAreas.Second);
 			}
 		}
+		//InconsistencyRate = 0.05;
+	}
+
+	public void RandomizeWorldPortals3() {
+		IEnumerable<PortalGroup> pp = ThePathfinder.GameMap.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Take(ScrambleAmount);
+		foreach (PortalGroup pg in pp) {
+			bool currentState = ThePathfinder.GameMap.GetPortalGroupState (pg, pg.LinkedAreas.First);
+			ThePathfinder.GameMap.SetPortalGroup(pg,!currentState,pg.LinkedAreas.First);
+			ThePathfinder.GameMap.SetPortalGroup(pg,!currentState,pg.LinkedAreas.Second);
+		}
+		//InconsistencyRate = 0.05;
 	}
 
 	MapSquare RandomPosition() {

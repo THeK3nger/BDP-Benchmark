@@ -53,4 +53,8 @@ public class Omniscent : MonoBehaviour, IMapBelief  {
 	public void CleanBelieves () {
 
 	}
+
+	public void ResetBelieves() {
+		//portalSquares = new Dictionary<MapSquare, bool>();
+	}
 }

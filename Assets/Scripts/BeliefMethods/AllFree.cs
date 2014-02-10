@@ -19,7 +19,7 @@ public class AllFree : MonoBehaviour, IHasNeighbours<MapSquare>  {
 	
 	public bool IsFree (MapSquare ms) {
 		if (CurrentTarget == ms) return true;
-		if (Original.Areas[ms.x,ms.y] != Area) return false;
+		if (Original.Areas.IsOutOfBound(ms.x,ms.y)|| Original.Areas[ms.x,ms.y] != Area) return false;
 		return Agent.IsFree(ms);
 	}
 	

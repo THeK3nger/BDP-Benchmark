@@ -12,7 +12,7 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 
 	// Use this for initialization
 	void Start () {
-		CleanBelieves();
+		//CleanBelieves();
 	}
 	
 	// Update is called once per frame
@@ -118,5 +118,9 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 				portalPassability.Add(pg,true);
 			}
 		}
+	}
+
+	public void ResetBelieves() {
+		//portalSquares = new Dictionary<MapSquare, bool>();
 	}
 }

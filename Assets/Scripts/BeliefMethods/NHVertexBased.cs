@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class NHVertexBased : MonoBehaviour, IMapBelief  {
 
@@ -47,6 +48,14 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 	public void UpdateBelief (MapSquare ms, bool state) {
 		if (portalSquares.ContainsKey(ms)) {
 			var pgs = Original.GetPortalGroupBySquare(ms);
+			if (pgs == null) {
+				Debug.LogError(String.Format("No Portal Group for square {0}",ms));
+				Debug.Log(Original.PortalSquares.ContainsKey(ms));
+				Debug.Log(portalSquares.ContainsKey(ms));
+				Debug.Log(state);
+				Debug.Log(ms);
+				Original.PrintStateAround(ms,4);
+			}
 			int area = Original.Areas[ms.x,ms.y];
 			if (pgs.Count > 1) {
 				portalSquares[ms] = state;
@@ -54,8 +63,16 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 			}
 			foreach(Portal p in pgs[0].Portals) {
 				MapSquare pms = p[area];
-				// Debug.Log("AREA: " + area + " " + p);
-				if (null == pms) { Debug.Log("WHAT?"); continue; }
+				if (null == pms) { 
+					Debug.LogError(String.Format("No map square in {0} for the area {1}",pms,area));
+					Debug.Log(p);
+					Debug.Log(area);
+					Debug.Log(state);
+					Debug.Log(ms);
+					Original.PrintStateAround(p.LinkedSquares.First,4);
+					Debug.Log("----------------------");
+					continue; 
+				}
 				portalSquares[pms] = state;
 			}
 		}
@@ -66,7 +83,7 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 	}
 
 	public int MemoryByteUsed () {
-		return portalSquares.Count;
+		return Original.PortalSquares.Count;
 	}
 
 	public void CleanBelieves () {
@@ -78,5 +95,9 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 				portalSquares.Add(ms,true);
 			}
 		}
+	}
+
+	public void ResetBelieves() {
+		portalSquares = new Dictionary<MapSquare, bool>();
 	}
 }

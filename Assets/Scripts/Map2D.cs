@@ -20,11 +20,6 @@ public class Map2D : MonoBehaviour
 	public TextAsset MapFile;
 
 	/// <summary>
-	/// The tilemap.
-	/// </summary>
-	public tk2dTileMap Tilemap;
-
-	/// <summary>
 	/// The compute graph on sta
 	/// </summary>
 	public bool ComputeGraphOnStart;
@@ -139,50 +134,12 @@ public class Map2D : MonoBehaviour
 		if (ComputeGraphOnStart) {
 			ConnectivityGraph ();
 		}
-		DrawMap ();
-		DrawAreaMap ();
 	}
 
-	/// <summary>
-	/// Draws the map updating the tilemap.
-	/// </summary>
-	public void DrawMap ()
-	{
-		for (int x = 0; x < Width; x++) {
-			for (int y = 0; y < Height; y++) {
-				if (!IsFree(x,y)) {
-					Tilemap.SetTile (x, Height - y, 0, 0);
-				} else {
-					//Tilemap.SetTile (x, Height - y, 0, -1);
-				}
-			}
-		}
-		Tilemap.Build ();
-	}
-
-	/// <summary>
-	/// Draws the areas partitioning on the map.
-	/// </summary>
-	public void DrawAreaMap ()
-	{
-		int currentColor = 1;
-		var areaColor = new Dictionary<int, int> ();
-		int currentArea;
-		for (int x = 0; x < Width; x++) {
-			for (int y = 0; y < Height; y++) {
-				currentArea = areaMap [x,y];
-				if (currentArea == 0)
-					continue;
-				if (areaColor.ContainsKey (currentArea)) {
-					Tilemap.SetTile (x, Height - y, 0, areaColor [currentArea]);
-				} else {
-					areaColor.Add (currentArea, currentColor + 1);
-					currentColor = (currentColor + 1) % 5;
-					Tilemap.SetTile (x, Height - y, 0, areaColor [currentArea]);
-				}
-			}
-		}
-		Tilemap.Build ();
+	public void ComputeMap() {
+		LoadMapFromFile();
+		MapPartitioning();
+		ConnectivityGraph();
 	}
 
 	/// <summary>
@@ -267,7 +224,7 @@ public class Map2D : MonoBehaviour
 					shrunkR = true;
 					// Else, if it is already shrunk and try to get bigger, end the area.
 				} else if (areaMap [x, y - 1] != currentAreaLabel && shrunkR) {
-					while (areaMap[x,y] == currentAreaLabel) {
+					while (areaMap[x,y] ==  currentAreaLabel) {
 						// This while undo the last line.
 						areaMap [x, y] = 0;
 						x--;
@@ -324,6 +281,8 @@ public class Map2D : MonoBehaviour
 		// Column Scan
 		bool portalStrike = false;
 		var pg = new PortalGroup();
+		int area1 = 0;
+		int area2 = 0;
 		for (int x=0; x<Width; x++) {
 			for (int y=0; y<Height; y++) {
 				// Check left for other areas.
@@ -333,30 +292,46 @@ public class Map2D : MonoBehaviour
 				currentSquare = new MapSquare(x,y);
 				leftSquare = new MapSquare(x-1,y);
 				if (IsFree(x,y) && leftArea != currentArea && leftArea != 0) {
-					pg.Add(new Portal (
-						currentSquare,
-						leftSquare,
-						currentArea,
-						leftArea));
-					if (!reversePortalDict.ContainsKey(currentSquare)) {
-						reversePortalDict[currentSquare] = new List<PortalGroup>();
+					if (area1 == 0 || (currentArea == area1 && leftArea == area2)) {
+						if (area1==0) {
+							area1 = currentArea;
+							area2 = leftArea;
+						}
+						pg.Add(new Portal (
+							currentSquare,
+							leftSquare,
+							currentArea,
+							leftArea));
+						if (!reversePortalDict.ContainsKey(currentSquare)) {
+							reversePortalDict[currentSquare] = new List<PortalGroup>();
+						}
+						reversePortalDict[currentSquare].Add(pg);
+						if (!reversePortalDict.ContainsKey(leftSquare)) {
+							reversePortalDict[leftSquare] = new List<PortalGroup>();
+						}
+						reversePortalDict[leftSquare].Add(pg);
+						// TODO: Write a generic function for this operation.
+						areaConnectivity.AddVertex(currentArea);
+						areaConnectivity.AddVertex(leftArea);
+						areaConnectivity.AddEdge(currentArea,leftArea);
+						if (!portalSquares.ContainsKey(currentSquare))
+							portalSquares.Add(currentSquare,true);
+						if (!portalSquares.ContainsKey(leftSquare))
+							portalSquares.Add(leftSquare,true);
+						portalStrike = true;
+					} else {
+						if (portalStrike) {
+							area1=0;
+							area2=0;
+							portalStrike = false;
+							portalConnectivity.AddVertex(pg);
+							pg = new PortalGroup();
+						}
 					}
-					reversePortalDict[currentSquare].Add(pg);
-					if (!reversePortalDict.ContainsKey(leftSquare)) {
-						reversePortalDict[leftSquare] = new List<PortalGroup>();
-					}
-					reversePortalDict[leftSquare].Add(pg);
-					// TODO: Write a generic function for this operation.
-					areaConnectivity.AddVertex(currentArea);
-					areaConnectivity.AddVertex(leftArea);
-					areaConnectivity.AddEdge(currentArea,leftArea);
-					if (!portalSquares.ContainsKey(currentSquare))
-						portalSquares.Add(currentSquare,true);
-					if (!portalSquares.ContainsKey(leftSquare))
-						portalSquares.Add(leftSquare,true);
-					portalStrike = true;
 				} else {
 					if (portalStrike) {
+						area1=0;
+						area2=0;
 						portalStrike = false;
 						portalConnectivity.AddVertex(pg);
 						pg = new PortalGroup();
@@ -367,6 +342,8 @@ public class Map2D : MonoBehaviour
 		// Row Scan
 		portalStrike = false;
 		pg = new PortalGroup();
+		area1=0;
+		area2=0;
 		for (int y=0; y<Height; y++) {
 			for (int x=0; x<Width; x++) {
 				currentArea = GetArea (x, y);
@@ -374,27 +351,41 @@ public class Map2D : MonoBehaviour
 				currentSquare = new MapSquare(x,y);
 				topSquare = new MapSquare(x,y-1);
 				if (IsFree(x,y) && topArea != currentArea && topArea != 0) {
-					pg.Add (new Portal (
-						currentSquare,
-						topSquare,
-						currentArea,
-						topArea));
-					if (!reversePortalDict.ContainsKey(currentSquare)) {
-						reversePortalDict[currentSquare] = new List<PortalGroup>();
+					if (area1 == 0 || (currentArea == area1 && topArea == area2)) {
+						if (area1==0) {
+							area1 = currentArea;
+							area2 = topArea;
+						}
+						pg.Add (new Portal (
+							currentSquare,
+							topSquare,
+							currentArea,
+							topArea));
+						if (!reversePortalDict.ContainsKey(currentSquare)) {
+							reversePortalDict[currentSquare] = new List<PortalGroup>();
+						}
+						reversePortalDict[currentSquare].Add(pg);
+						if (!reversePortalDict.ContainsKey(topSquare)) {
+							reversePortalDict[topSquare] = new List<PortalGroup>();
+						}
+						reversePortalDict[topSquare].Add(pg);
+						areaConnectivity.AddVertex(currentArea);
+						areaConnectivity.AddVertex(topArea);
+						areaConnectivity.AddEdge(currentArea,topArea);
+						if (!portalSquares.ContainsKey(currentSquare))
+							portalSquares.Add(currentSquare,true);
+						if (!portalSquares.ContainsKey(topSquare))
+							portalSquares.Add(topSquare,true);
+						portalStrike = true;
+					} else {
+						if (portalStrike) {
+							area1=0;
+							area2=0;
+							portalStrike = false;
+							portalConnectivity.AddVertex(pg);
+							pg = new PortalGroup();
+						}
 					}
-					reversePortalDict[currentSquare].Add(pg);
-					if (!reversePortalDict.ContainsKey(topSquare)) {
-						reversePortalDict[topSquare] = new List<PortalGroup>();
-					}
-					reversePortalDict[topSquare].Add(pg);
-					areaConnectivity.AddVertex(currentArea);
-					areaConnectivity.AddVertex(topArea);
-					areaConnectivity.AddEdge(currentArea,topArea);
-					if (!portalSquares.ContainsKey(currentSquare))
-						portalSquares.Add(currentSquare,true);
-					if (!portalSquares.ContainsKey(topSquare))
-						portalSquares.Add(topSquare,true);
-					portalStrike = true;
 				} else {
 					if (portalStrike) {
 						portalStrike = false;
@@ -558,6 +549,27 @@ public class Map2D : MonoBehaviour
 //		return result;
 	}
 
+	public void PrintStateAround(MapSquare ms,int range) {
+		string result = "  ";
+		// Build Header
+		for (int x=ms.x - range;x<ms.x+range;x++) {
+			result += " " + x;
+		}
+		result += "\n";
+		for (int y=ms.y - range;y<ms.y+range;y++) {
+			result += y + " ";
+			for (int x=ms.x - range;x<ms.x+range;x++) {
+				if (IsFree(x,y)) {
+					result += " " + Areas[x,y];
+				} else {
+					result += " @";
+				}
+			}
+			result += "\n";
+		}
+		Debug.Log(result);
+	}
+
 #region SertializationMethods
 	public void SerializeData() {
 		var data = new Map2DSerialization ();
@@ -588,43 +600,43 @@ public class Map2D : MonoBehaviour
 		areaConnectivity = data.AreaConnectivity;
 		stream.Close();
 		Debug.Log ("Reading Complete");
-		DebugMessages();
+		//DebugMessages();
 		return true;
 	}
 #endregion
 
-	/// <summary>
-	/// Write Debugs the messages on the Unity console.
-	/// </summary>
-	public void DebugMessages() {
-		//* TMP *//
-		// TODO: Remove debug code.
-		int countPG = 0;
-		foreach (PortalGroup pgg in portalConnectivity.Vertices) {
-			pgg.Equals(pgg);
-			countPG++;
-		}
-		Debug.Log("PG = " + countPG);
-		Debug.Log("--------------");
-		foreach (int area in areaConnectivity.Vertices) {
-			string output = "AREA: " + area + " { ";
-			foreach (int otherArea in areaConnectivity.GetNeighbours(area)) {
-				output += otherArea + " ";
-			}
-			output += " }";
-			Debug.Log (output);
-		}
-		Debug.Log("--------------");
-		foreach (PortalGroup p in portalConnectivity.Vertices) {
-			string output = "PG: " + p + " { ";
-			foreach (PortalGroup otherp in portalConnectivity.GetNeighbours(p)) {
-				output += otherp + " " + portalConnectivity.GetEdgeLabel(p,otherp) + " ";
-			}
-			output += " }";
-			Debug.Log (output);
-		}
-		Debug.Log("--------------");
-	}
+//	/// <summary>
+//	/// Write Debugs the messages on the Unity console.
+//	/// </summary>
+//	public void DebugMessages() {
+//		//* TMP *//
+//		// TODO: Remove debug code.
+//		int countPG = 0;
+//		foreach (PortalGroup pgg in portalConnectivity.Vertices) {
+//			pgg.Equals(pgg);
+//			countPG++;
+//		}
+//		Debug.Log("PG = " + countPG);
+//		Debug.Log("--------------");
+//		foreach (int area in areaConnectivity.Vertices) {
+//			string output = "AREA: " + area + " { ";
+//			foreach (int otherArea in areaConnectivity.GetNeighbours(area)) {
+//				output += otherArea + " ";
+//			}
+//			output += " }";
+//			Debug.Log (output);
+//		}
+//		Debug.Log("--------------");
+//		foreach (PortalGroup p in portalConnectivity.Vertices) {
+//			string output = "PG: " + p + " { ";
+//			foreach (PortalGroup otherp in portalConnectivity.GetNeighbours(p)) {
+//				output += otherp + " " + portalConnectivity.GetEdgeLabel(p,otherp) + " ";
+//			}
+//			output += " }";
+//			Debug.Log (output);
+//		}
+//		Debug.Log("--------------");
+//	}
 
 
 	[Serializable]

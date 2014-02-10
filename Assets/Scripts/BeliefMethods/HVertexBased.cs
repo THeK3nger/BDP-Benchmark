@@ -15,7 +15,7 @@ public class HVertexBased : MonoBehaviour, IMapBelief {
 	// Use this for initialization
 	void Awake () {
 		CleanBelieves();
-		Debug.Log("MEMORY USED: " + MemoryByteUsed());
+		//Debug.Log("MEMORY USED: " + MemoryByteUsed());
 	}
 
 //	public bool IsFree (MapSquare ms) {
@@ -81,7 +81,7 @@ public class HVertexBased : MonoBehaviour, IMapBelief {
 	}
 
 	public int MemoryByteUsed () {
-		return portalPassability.Count;
+		return Original.PortalSquares.Count;
 	}
 
 	public void UpdateBelief (MapSquare ms, bool state) {
@@ -89,5 +89,9 @@ public class HVertexBased : MonoBehaviour, IMapBelief {
 		foreach (PortalGroup pg in pgs) {
 			portalPassability[pg] = state;
 		}
+	}
+
+	public void ResetBelieves() {
+
 	}
 }

@@ -11,7 +11,7 @@ public class Map2DEditor : Editor {
 			map.LoadMapFromFile ();
 			map.MapPartitioning();
 			map.ConnectivityGraph();
-			map.DebugMessages();
+			//map.DebugMessages();
 			map.SerializeData();
 		}
 	}

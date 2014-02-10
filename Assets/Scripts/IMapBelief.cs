@@ -22,4 +22,6 @@ public interface IMapBelief : IHasNeighbours<MapSquare> {
 	int MemoryByteUsed();
 
 	void CleanBelieves();
+
+	void ResetBelieves();
 }
