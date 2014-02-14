@@ -21,7 +21,7 @@ public sealed class FixedTotalRandom : IPortalsRandomStrategy {
     public float StartingClosedAmount;
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
         // Only one component of type IPortalRandomStrategy can exist in one object!
         if (GetComponent<IPortalsRandomStrategy>() != null) Destroy(this);
         r = new System.Random(Seed);
