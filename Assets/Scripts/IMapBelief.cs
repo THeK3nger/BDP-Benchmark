@@ -4,7 +4,7 @@ using RoomOfRequirement;
 
 public interface IMapBelief : IHasNeighbours<MapSquare> {
 
-	Map2D Original { get; }
+    BDPMap Original { get; }
 	bool Hierarchical {get; }
 	MapSquare CurrentTarget {get; set; }
 

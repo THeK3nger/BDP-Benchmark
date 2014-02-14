@@ -13,8 +13,13 @@ public class BenchmarkData  {
 
 	public List<SingleRunData> RunsData { get; private set; }
 
-	public BenchmarkData() {
+	public BenchmarkData(PathfindTester test) {
 		RunsData = new List<SingleRunData>();
+        this.AgentType = test.Pathfinder.AgentBelief.ToString();
+        this.BeliefMemoryUsed = test.Pathfinder.AgentBelief.MemoryByteUsed();
+        this.ScrambleRate = test.ScrambleRate;
+        this.IncosistencyRate = test.RandomStrategy.GetRandomAmount();
+        this.MapFile = test.CurrentMapName;
 	}
 
 	public void PrintToFile() {

@@ -5,9 +5,9 @@ using System;
 
 public class NHVertexBased : MonoBehaviour, IMapBelief  {
 
-	public Map2D OriginalMap;
+    public BDPMap OriginalMap;
 
-	public Map2D Original { get { return OriginalMap; } }
+    public BDPMap Original { get { return OriginalMap; } }
 	public bool Hierarchical {get { return false; } }
 	public MapSquare CurrentTarget { get; set; }
 

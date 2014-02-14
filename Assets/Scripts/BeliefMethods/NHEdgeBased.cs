@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class NHEdgeBased : MonoBehaviour, IMapBelief {
 
-	public Map2D OriginalMap;
+    public BDPMap OriginalMap;
 	public bool Hierarchical {get { return false; } }
 	public MapSquare CurrentTarget { get; set; }
 
@@ -100,7 +100,7 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 		return GetNeighbours(node);
 	}
 
-	public Map2D Original {
+    public BDPMap Original {
 		get {
 			return OriginalMap;
 		}
@@ -123,4 +123,5 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 	public void ResetBelieves() {
 		//portalSquares = new Dictionary<MapSquare, bool>();
 	}
+
 }

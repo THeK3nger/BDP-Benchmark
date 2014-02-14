@@ -2,32 +2,21 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class HVertexBased : MonoBehaviour, IMapBelief {
+public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 
-	public Map2D OriginalMap;
-	
-	public Map2D Original { get { return OriginalMap; } }
+    public BDPMap OriginalMap;
+
+    public BDPMap Original { get { return OriginalMap; } }
 	public bool Hierarchical {get { return true; } }
 	public MapSquare CurrentTarget { get; set; }
 
 	Dictionary<PortalGroup,bool> portalPassability = new Dictionary<PortalGroup, bool>();
 
 	// Use this for initialization
-	void Awake () {
+	void Start () {
 		CleanBelieves();
 		//Debug.Log("MEMORY USED: " + MemoryByteUsed());
 	}
-
-//	public bool IsFree (MapSquare ms) {
-//		if (Original.PortalSquares.ContainsKey(ms)) {
-//			var pgs = Original.GetPortalGroupBySquare(ms);
-//			foreach (PortalGroup pg in pgs) {
-//				if (!portalPassability[pg]) return false;
-//			}
-//			return true;
-//		}
-//		return Original.IsFree(ms);
-//	}
 
 	public bool IsFree (MapSquare ms) {
 		if (Original.PortalSquares.ContainsKey(ms)) {
@@ -94,4 +83,5 @@ public class HVertexBased : MonoBehaviour, IMapBelief {
 	public void ResetBelieves() {
 
 	}
+
 }

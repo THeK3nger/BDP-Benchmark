@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(Map2D))]
+[RequireComponent(typeof(BDPMap))]
 public class MapRenderer : MonoBehaviour {
 	
 	/// <summary>
@@ -10,14 +10,14 @@ public class MapRenderer : MonoBehaviour {
 	/// </summary>
 	public tk2dTileMap Tilemap;
 
-	Map2D baseMap;
+    BDPMap baseMap;
 
 	// Use this for initialization
 	void Start () {
 		if (Tilemap == null) {
 			Debug.LogError("TileMap not setted in the inspectro!");
 		}
-		baseMap = GetComponent<Map2D>();
+        baseMap = GetComponent<BDPMap>();
 		InvokeRepeating("DrawCallback",1.0f,1.0f);
 	}
 	

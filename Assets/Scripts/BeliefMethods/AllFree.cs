@@ -5,9 +5,9 @@ using RoomOfRequirement;
 
 public class AllFree : MonoBehaviour, IHasNeighbours<MapSquare>  {
 	
-	public Map2D OriginalMap;
-	
-	public Map2D Original { get { return OriginalMap; } }
+	public BDPMap OriginalMap;
+
+    public BDPMap Original { get { return OriginalMap; } }
 	public bool Hierarchical {get { return false; } }
 	public MapSquare CurrentTarget { get; set; }
 	public int Area {get; set; }
