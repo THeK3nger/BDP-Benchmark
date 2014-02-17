@@ -15,7 +15,7 @@ public class MapRenderer : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		if (Tilemap == null) {
-			Debug.LogError("TileMap not setted in the inspectro!");
+			Debug.LogError("TileMap is not set in the inspector!");
 		}
         baseMap = GetComponent<BDPMap>();
 		InvokeRepeating("DrawCallback",1.0f,1.0f);
