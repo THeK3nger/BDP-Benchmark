@@ -106,12 +106,6 @@ public class BDPMap : MonoBehaviour
 
 #endregion
 
-	// Unity Start Function
-	void Awake ()
-	{
-
-	}
-
 	public void ComputeMap() {
 		LoadMapFromFile();
 		MapPartitioning();
@@ -124,8 +118,8 @@ public class BDPMap : MonoBehaviour
 	public void LoadMapFromFile ()
 	{
 		// Load text file from TextAsset.
-		string map_string = MapFile.text;
-        rawMap = BDP.Map.MapParser.ParseMapFromString(map_string);
+		string mapString = MapFile.text;
+        rawMap = BDP.Map.MapParser.ParseMapFromString(mapString);
 	}
 
 	/// <summary>
@@ -201,153 +195,163 @@ public class BDPMap : MonoBehaviour
 		}
 	}
 
-	/// <summary>
+    #region ConnectivityComputation
+    /// <summary>
 	/// Compute the connectivity graph of the map.
 	/// </summary>
     ///  TODO: This function should be re-factored avoiding code duplication.
 	public void ConnectivityGraph ()
 	{
-		int currentArea;
-		int leftArea;
-		int topArea;
-		MapSquare currentSquare;
-		MapSquare leftSquare;
-		MapSquare topSquare;
 		reversePortalDict = new Dictionary<MapSquare, List<PortalGroup>>();
-		//var connectivityGraph = new Dictionary<int,HashSet<int>> ();
 		areaConnectivity = new UndirectedGraph<int>();
 		portalConnectivity = new UndirectedLabeledGraph<PortalGroup,bool,double>();
 		portalSquares = new Dictionary<MapSquare, bool>();
 		// Column Scan
-		bool portalStrike = false;
-		var pg = new PortalGroup();
-		int area1 = 0;
-		int area2 = 0;
-		for (int x=0; x<Width; x++) {
-			for (int y=0; y<Height; y++) {
-				// Check left for other areas.
-				// UNDONE: If I move right and I don't change area I can avoid left checking.
-				currentArea = GetArea (x, y);
-				leftArea = GetArea (x - 1, y);
-				currentSquare = new MapSquare(x,y);
-				leftSquare = new MapSquare(x-1,y);
-				if (Map.IsFree(x,y) && leftArea != currentArea && leftArea != 0) {
-					if (area1 == 0 || (currentArea == area1 && leftArea == area2)) {
-						if (area1==0) {
-							area1 = currentArea;
-							area2 = leftArea;
-						}
-						pg.Add(new Portal (
-							currentSquare,
-							leftSquare,
-							currentArea,
-							leftArea));
-						if (!reversePortalDict.ContainsKey(currentSquare)) {
-							reversePortalDict[currentSquare] = new List<PortalGroup>();
-						}
-						reversePortalDict[currentSquare].Add(pg);
-						if (!reversePortalDict.ContainsKey(leftSquare)) {
-							reversePortalDict[leftSquare] = new List<PortalGroup>();
-						}
-						reversePortalDict[leftSquare].Add(pg);
-						// TODO: Write a generic function for this operation.
-						areaConnectivity.AddVertex(currentArea);
-						areaConnectivity.AddVertex(leftArea);
-						areaConnectivity.AddEdge(currentArea,leftArea);
-						if (!portalSquares.ContainsKey(currentSquare))
-							portalSquares.Add(currentSquare,true);
-						if (!portalSquares.ContainsKey(leftSquare))
-							portalSquares.Add(leftSquare,true);
-						portalStrike = true;
-					} else {
-						if (portalStrike) {
-							area1=0;
-							area2=0;
-							portalStrike = false;
-							portalConnectivity.AddVertex(pg);
-							pg = new PortalGroup();
-						}
-					}
-				} else {
-					if (portalStrike) {
-						area1=0;
-						area2=0;
-						portalStrike = false;
-						portalConnectivity.AddVertex(pg);
-						pg = new PortalGroup();
-					}
-				}
-			}
-		}
+        //int currentArea;
+        //MapSquare currentSquare;
+        ColumnConnectivityScan();
 		// Row Scan
-		portalStrike = false;
-		pg = new PortalGroup();
-		area1=0;
-		area2=0;
-		for (int y=0; y<Height; y++) {
-			for (int x=0; x<Width; x++) {
-				currentArea = GetArea (x, y);
-				topArea = GetArea (x, y - 1);
-				currentSquare = new MapSquare(x,y);
-				topSquare = new MapSquare(x,y-1);
-                if (Map.IsFree(x, y) && topArea != currentArea && topArea != 0) {
-					if (area1 == 0 || (currentArea == area1 && topArea == area2)) {
-						if (area1==0) {
-							area1 = currentArea;
-							area2 = topArea;
-						}
-						pg.Add (new Portal (
-							currentSquare,
-							topSquare,
-							currentArea,
-							topArea));
-						if (!reversePortalDict.ContainsKey(currentSquare)) {
-							reversePortalDict[currentSquare] = new List<PortalGroup>();
-						}
-						reversePortalDict[currentSquare].Add(pg);
-						if (!reversePortalDict.ContainsKey(topSquare)) {
-							reversePortalDict[topSquare] = new List<PortalGroup>();
-						}
-						reversePortalDict[topSquare].Add(pg);
-						areaConnectivity.AddVertex(currentArea);
-						areaConnectivity.AddVertex(topArea);
-						areaConnectivity.AddEdge(currentArea,topArea);
-						if (!portalSquares.ContainsKey(currentSquare))
-							portalSquares.Add(currentSquare,true);
-						if (!portalSquares.ContainsKey(topSquare))
-							portalSquares.Add(topSquare,true);
-						portalStrike = true;
-					} else {
-						if (portalStrike) {
-							area1=0;
-							area2=0;
-							portalStrike = false;
-							portalConnectivity.AddVertex(pg);
-							pg = new PortalGroup();
-						}
-					}
-				} else {
-					if (portalStrike) {
-						portalStrike = false;
-						portalConnectivity.AddVertex(pg);
-						pg = new PortalGroup();
-					}
-				}
-			}
-		}
-		pg = null;
+        RowConnectivityScan();
 
-		foreach (PortalGroup pg1 in portalConnectivity.Vertices) {
-			foreach (PortalGroup pg2 in portalConnectivity.Vertices) {
-				if (pg1.IsLinkedWith(pg2)) {
-					portalConnectivity.AddEdge(pg1,pg2);
-					portalConnectivity.SetEdgeLabel(pg1,pg2,PortalGroup.Distance(pg1,pg2));
-				}
-			}
-		}
+        FillPortalConnectivity();
 	}
 
-	/// <summary>
+    /// <summary>
+    /// Fill the portal connectivity edges and weights on the basis of the
+    /// portal groups found in the previous steps.
+    /// </summary>
+    private void FillPortalConnectivity() {
+        foreach (PortalGroup pg1 in portalConnectivity.Vertices) {
+            foreach (PortalGroup pg2 in portalConnectivity.Vertices) {
+                if (pg1.IsLinkedWith(pg2)) {
+                    portalConnectivity.AddEdge(pg1, pg2);
+                    portalConnectivity.SetEdgeLabel(pg1, pg2, PortalGroup.Distance(pg1, pg2));
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Scan the map searching for horizontal portal groups.
+    /// </summary>
+    /// TODO: Code duplication with ColumnConnectivityScan.
+    private void RowConnectivityScan() {
+        bool portalStrike = false;
+        var pg = new PortalGroup();
+        for (int y = 0; y < Height; y++) {
+            for (int x = 0; x < Width; x++) {
+                MapSquare topSquare;
+                int topArea;
+                int currentArea = GetArea(x, y);
+                 topArea = GetArea(x, y - 1);
+                MapSquare currentSquare = new MapSquare(x, y);
+                topSquare = new MapSquare(x, y - 1);
+                bool condOne = Map.IsFree(x, y) && topArea != currentArea && topArea != 0;
+                bool condTwo = !portalStrike || currentArea == GetArea(x - 1, y) && topArea == GetArea(x - 1, y - 1);
+                if (condOne && condTwo) {
+                    pg.Add(new Portal(
+                        currentSquare,
+                        topSquare,
+                        currentArea,
+                        topArea));
+                    AddToReversePortalDictionary(currentSquare, topSquare, pg);
+                    AddToAreaConnectivity(currentArea, topArea);
+                    AddToPortalSquares(currentSquare, topSquare);
+                    portalStrike = true;
+                } else {
+                    if (portalStrike) {
+                        portalStrike = false;
+                        portalConnectivity.AddVertex(pg);
+                        pg = new PortalGroup();
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Scan the map searching for vertical portal groups.
+    /// </summary>
+    /// TODO: Code duplication with RowConnectivityScan.
+    private void ColumnConnectivityScan() {
+        bool portalStrike = false;
+        var pg = new PortalGroup();
+        for (int x = 0; x < Width; x++) {
+            for (int y = 0; y < Height; y++) {
+                int leftArea;
+                MapSquare leftSquare;
+                // Check left for other areas.
+                // UNDONE: If I move right and I don't change area I can avoid left checking.
+                int currentArea = GetArea(x, y);
+                leftArea = GetArea(x - 1, y);
+                MapSquare currentSquare = new MapSquare(x, y);
+                leftSquare = new MapSquare(x - 1, y);
+                bool condOne = Map.IsFree(x, y) && leftArea != currentArea && leftArea != 0;
+                bool condTwo = !portalStrike || currentArea == GetArea(x, y - 1) && leftArea == GetArea(x - 1, y - 1);
+                if (condOne && condTwo) {
+                    pg.Add(new Portal(
+                        currentSquare,
+                        leftSquare,
+                        currentArea,
+                        leftArea));
+                    AddToReversePortalDictionary(currentSquare, leftSquare, pg);
+                    AddToAreaConnectivity(currentArea, leftArea);
+                    AddToPortalSquares(currentSquare, leftSquare);
+                    portalStrike = true;
+                } else {
+                    if (portalStrike) {
+                        portalStrike = false;
+                        portalConnectivity.AddVertex(pg);
+                        pg = new PortalGroup();
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Add a new portal square to the portalSquares list. It requires the 
+    /// two squares which form a portal.
+    /// </summary>
+    /// <param name="currentSquare">the current square</param>
+    /// <param name="otherSquare">the other square</param>
+    private void AddToPortalSquares(MapSquare currentSquare, MapSquare otherSquare) {
+        if (!portalSquares.ContainsKey(currentSquare))
+            portalSquares.Add(currentSquare, true);
+        if (!portalSquares.ContainsKey(otherSquare))
+            portalSquares.Add(otherSquare, true);
+    }
+
+    /// <summary>
+    /// Add an entry in the areaConnectivity list.
+    /// </summary>
+    /// <param name="currentArea">the first area</param>
+    /// <param name="otherArea">the second, linked, area</param>
+    private void AddToAreaConnectivity(int currentArea, int otherArea) {
+        areaConnectivity.AddVertex(currentArea);
+        areaConnectivity.AddVertex(otherArea);
+        areaConnectivity.AddEdge(currentArea, otherArea);
+    }
+
+    /// <summary>
+    /// Add an entry to the reversePortalDictionary.
+    /// </summary>
+    /// <param name="currentSquare">the current square</param>
+    /// <param name="otherSquare">the other square</param>
+    /// <param name="pg">the portal group where these two squares belong.</param>
+    private void AddToReversePortalDictionary(MapSquare currentSquare, MapSquare otherSquare, PortalGroup pg) {
+        if (!reversePortalDict.ContainsKey(currentSquare)) {
+            reversePortalDict[currentSquare] = new List<PortalGroup>();
+        }
+        reversePortalDict[currentSquare].Add(pg);
+        if (!reversePortalDict.ContainsKey(otherSquare)) {
+            reversePortalDict[otherSquare] = new List<PortalGroup>();
+        }
+        reversePortalDict[otherSquare].Add(pg);
+    }
+    #endregion
+
+    /// <summary>
 	/// Returns the first unlabeled free top-leftmost square.
 	/// </summary>
 	/// <returns>The coordinates of the first free unlabeled top-leftmost square.</returns>
