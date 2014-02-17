@@ -1,4 +1,4 @@
-﻿#define MAPPARSER_DEBUG_LOG
+#define MAPPARSER_DEBUG_LOG
 
 using UnityEngine;
 using System.Collections;
@@ -6,6 +6,9 @@ using RoomOfRequirement.Generic;
 
 namespace BDP.Map {
 
+    /// <summary>
+    /// Implement a static map parser for map in the MovingAI database.
+    /// </summary>
     public static class MapParser {
 
         public static Map2D ParseMapFromString(string mapstring) {

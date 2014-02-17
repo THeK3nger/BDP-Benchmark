@@ -8,8 +8,18 @@ using UnityEngine;
 using RoomOfRequirement.Generic;
 
 /// <summary>
-/// Contains and manages a 2D grid map.
+/// Handle a map for a BDP approach.
 /// </summary>
+/// <remarks>
+/// It handles a 2D char representation, a 2D partitioning of the map and
+/// the creation of an high-level representation of the map in terms of
+/// areas, portals and area and portal connectivity.
+/// 
+/// All this information is computed <b>before</b> the actual pathfinding
+/// begins and are stored in a set of graph-like data-structure.
+/// 
+/// The map is loaded by a text assets.
+/// </remarks>
 public class BDPMap : MonoBehaviour
 {
 
@@ -338,7 +348,7 @@ public class BDPMap : MonoBehaviour
     /// </summary>
     /// <param name="currentSquare">the current square</param>
     /// <param name="otherSquare">the other square</param>
-    /// <param name="pg">the portal group where these two squares belong.</param>
+    /// <param name="pg">the portal group where these two squares belong. </param>
     private void AddToReversePortalDictionary(MapSquare currentSquare, MapSquare otherSquare, PortalGroup pg) {
         if (!reversePortalDict.ContainsKey(currentSquare)) {
             reversePortalDict[currentSquare] = new List<PortalGroup>();

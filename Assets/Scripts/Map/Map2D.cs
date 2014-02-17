@@ -1,9 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 using RoomOfRequirement.Generic;
 
+/// <summary>
+/// Store raw information for a 2D map.
+/// </summary>
 public class Map2D {
 
     /// <summary>
@@ -66,11 +69,15 @@ public class Map2D {
         return IsFree(new MapSquare(x, y));
     }
 
+    /// <summary>
+    /// Determines whether the <x,y> square is free.
+    /// </summary>
+    /// <returns><c>true</c> if the <x,y> square is free; otherwise, <c>false</c>.</returns>
+    /// <param name="ms">The map square that have to be chacked.</param>
     public bool IsFree(MapSquare ms) {
         if (ms.x >= Width || ms.x < 0 || ms.y >= Height || ms.y < 0)
             return false;
         return ElementIs("free", rawMap[ms.x, ms.y]);
-
     }
 
     /// <summary>

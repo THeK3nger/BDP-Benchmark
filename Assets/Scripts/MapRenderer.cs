@@ -1,15 +1,21 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// Implement a rendering component for a BDPMap map.
+/// </summary>
 [RequireComponent(typeof(BDPMap))]
 public class MapRenderer : MonoBehaviour {
 	
 	/// <summary>
-	/// The tilemap.
+	/// The canvas tilemap.
 	/// </summary>
 	public tk2dTileMap Tilemap;
 
+    /// <summary>
+    /// The original BDPMap map.
+    /// </summary>
     BDPMap baseMap;
 
 	// Use this for initialization
@@ -18,12 +24,19 @@ public class MapRenderer : MonoBehaviour {
 			Debug.LogError("TileMap is not set in the inspector!");
 		}
         baseMap = GetComponent<BDPMap>();
-		InvokeRepeating("DrawCallback",1.0f,1.0f);
+        StartCoroutine(DrawCallback());
 	}
 	
-	void DrawCallback() {
-		DrawAreaMap();
-		DrawMap();
+    /// <summary>
+    /// Drawing Coroutine.
+    /// </summary>
+    /// <returns></returns>
+	IEnumerator DrawCallback() {
+        while (true) {
+            yield return new WaitForSeconds(1.0f);
+            DrawAreaMap();
+            DrawMap();
+        }
 	}
 
 	/// <summary>
@@ -66,10 +79,5 @@ public class MapRenderer : MonoBehaviour {
 			}
 		}
 		Tilemap.Build ();
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
 	}
 }

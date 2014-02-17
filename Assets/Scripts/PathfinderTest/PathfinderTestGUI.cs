@@ -2,6 +2,10 @@
 using System.Collections;
 using System;
 
+/// <summary>
+/// This component write on two Unity Label GUI the global and local progress
+/// of the benchmark.
+/// </summary>
 [RequireComponent(typeof(PathfindTester))]
 public class PathfinderTestGUI : MonoBehaviour {
 
