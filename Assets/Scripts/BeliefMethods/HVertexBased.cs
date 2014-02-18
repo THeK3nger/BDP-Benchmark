@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -10,7 +10,8 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	public bool Hierarchical {get { return true; } }
 	public MapSquare CurrentTarget { get; set; }
 
-	Dictionary<PortalGroup,bool> portalPassability = new Dictionary<PortalGroup, bool>();
+    Dictionary<PortalGroup, bool> portalPassability = new Dictionary<PortalGroup, bool>();
+    Dictionary<PortalGroup, float> portalTimestamp = new Dictionary<PortalGroup, float>();
 
 	// Use this for initialization
 	void Start () {
@@ -36,9 +37,6 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 
 	public List<MapSquare> GetNeighbours(MapSquare ms) {
 		List<MapSquare> result = new List<MapSquare>();
-//		if (Original.PortalSquares.ContainsKey(ms)) {
-//
-//		} else {
 		int area = Original.Areas[ms.x,ms.y];
 		var pgs = Original.GetPortalGroupByAreas(area);
 		foreach (PortalGroup pg in pgs) {
@@ -63,8 +61,10 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 		foreach (PortalGroup pg in Original.PortalConnectivity.Vertices) {
 			if (portalPassability.ContainsKey(pg)) {
 				portalPassability[pg] = true;
+                portalTimestamp[pg] = Time.time;
 			} else {
 				portalPassability.Add(pg,true);
+                portalTimestamp.Add(pg, Time.time);
 			}
 		}
 	}
@@ -76,12 +76,24 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	public void UpdateBelief (MapSquare ms, bool state) {
 		var pgs = Original.GetPortalGroupBySquare(ms);
 		foreach (PortalGroup pg in pgs) {
-			portalPassability[pg] = state;
+            UpdateBelief(pg, state);
 		}
 	}
 
-	public void ResetBelieves() {
+    public void UpdateBelief(PortalGroup pg, bool state) {
+        portalPassability[pg] = state;
+        portalTimestamp[pg] = Time.time;
+    }
 
+	public void ResetBelieves() {
+        CleanBelieves();
 	}
 
+    public void OpenOldPortals(float timeLimit) {
+        foreach (PortalGroup pg in portalPassability.Keys) {
+            if (portalTimestamp[pg] < timeLimit) {
+                UpdateBelief(pg,true);
+            }
+        }
+    }
 }

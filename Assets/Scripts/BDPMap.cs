@@ -209,7 +209,6 @@ public class BDPMap : MonoBehaviour
     /// <summary>
 	/// Compute the connectivity graph of the map.
 	/// </summary>
-    ///  TODO: This function should be re-factored avoiding code duplication.
 	public void ConnectivityGraph ()
 	{
 		reversePortalDict = new Dictionary<MapSquare, List<PortalGroup>>();
