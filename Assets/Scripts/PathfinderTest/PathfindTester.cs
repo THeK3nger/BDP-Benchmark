@@ -134,11 +134,11 @@ public class PathfindTester : MonoBehaviour {
 	public IEnumerator MainNHTestLoop() {
         CurrentMapIndex = 0;
 		foreach (TextAsset txa in allMaps) {
-			ThePathfinder.AgentBelief.ResetBelieves();
             CurrentMapIndex++;
 			/* Update the map and recompute the map. */
 			ThePathfinder.GameMap.MapFile = txa;
 			ThePathfinder.GameMap.ComputeMap();
+            ThePathfinder.AgentBelief.ResetBelieves();
 			/* ************************************* */
 			BenchmarkData bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
@@ -170,6 +170,18 @@ public class PathfindTester : MonoBehaviour {
 				pathfindingCall++;
 				srd.NumberOfAttempts++;
 				if (path == null) {
+                    if (ThePathfinder.AgentBelief.Hierarchical) {
+                        IMapHierarchicalBelief belief = ThePathfinder.AgentBelief as IMapHierarchicalBelief;
+                        float T = 10.0f;
+                        float Tmin = 1.0f;
+                        while (path == null || T > Tmin) {
+                            belief.OpenOldPortals(T);
+                            path = ThePathfinder.PathFind(currentPos, targetPos);
+                            if (path == null) {
+                                T--;
+                            }
+                        }
+                    }
 					//Debug.Log("No path found!");
 					srd.PathFound = false;
 					break;

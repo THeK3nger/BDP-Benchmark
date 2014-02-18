@@ -114,12 +114,16 @@ public class BDPMap : MonoBehaviour
 		}
 	}
 
+    public bool MapIsLoaded { private set; get; }
+
 #endregion
 
 	public void ComputeMap() {
+        MapIsLoaded = false;
 		LoadMapFromFile();
 		MapPartitioning();
 		ConnectivityGraph();
+        MapIsLoaded = true;
 	}
 
 	/// <summary>

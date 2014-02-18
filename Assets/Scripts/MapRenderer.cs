@@ -34,8 +34,10 @@ public class MapRenderer : MonoBehaviour {
 	IEnumerator DrawCallback() {
         while (true) {
             yield return new WaitForSeconds(1.0f);
-            DrawAreaMap();
-            DrawMap();
+            if (baseMap.MapIsLoaded) {
+                DrawAreaMap();
+                DrawMap();
+            }
         }
 	}
 

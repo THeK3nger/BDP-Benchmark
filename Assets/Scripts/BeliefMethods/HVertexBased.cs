@@ -15,7 +15,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 
 	// Use this for initialization
 	void Start () {
-		CleanBelieves();
+		//CleanBelieves();
 		//Debug.Log("MEMORY USED: " + MemoryByteUsed());
 	}
 
