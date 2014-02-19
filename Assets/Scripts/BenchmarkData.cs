@@ -45,8 +45,8 @@ public class BenchmarkData  {
     /// <param name="test">A reference to the actual testing class instance.</param>
 	public BenchmarkData(PathfindTester test) {
 		RunsData = new List<SingleRunData>();
-        this.AgentType = test.Pathfinder.AgentBelief.ToString();
-        this.BeliefMemoryUsed = test.Pathfinder.AgentBelief.MemoryByteUsed();
+        this.AgentType = test.ThePathfinder.AgentBelief.ToString();
+        this.BeliefMemoryUsed = test.ThePathfinder.AgentBelief.MemoryByteUsed();
         this.ScrambleRate = test.ScrambleRate;
         this.IncosistencyRate = test.RandomStrategy.GetRandomAmount();
         this.MapFile = test.CurrentMapName;

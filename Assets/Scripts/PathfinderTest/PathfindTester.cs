@@ -44,19 +44,7 @@ public class PathfindTester : MonoBehaviour {
     /// <summary>
     /// A reference to the main pathfinder object.
     /// </summary>
-	Pathfinder ThePathfinder;
-
-    public Pathfinder Pathfinder { get { return ThePathfinder; } private set { Pathfinder = value; } }
-
-    /// <summary>
-    /// Store the current position.
-    /// </summary>
-	///MapSquare currentPos;
-
-    /// <summary>
-    /// Store the target position.
-    /// </summary>
-	///MapSquare targetPos;
+    public Pathfinder ThePathfinder { get; private set; }
 
     /// <summary>
     /// An instance of the RNG.
@@ -73,8 +61,14 @@ public class PathfindTester : MonoBehaviour {
     /// </summary>
 	List<TextAsset> allMaps = new List<TextAsset>();
 
+    /// <summary>
+    /// A reference to a portal rondomizer algorithm.
+    /// </summary>
     public IPortalsRandomStrategy RandomStrategy {get; private set;}
 
+    /// <summary>
+    /// Return the name of he map.
+    /// </summary>
     public string CurrentMapName { get { return allMaps[CurrentMapIndex].name; } }
 
     bool ExecutionError = false;
@@ -82,6 +76,8 @@ public class PathfindTester : MonoBehaviour {
     SingleRunData srd;
 
     MapSquare lastSquare;
+
+    public AgentPositioning AgentIndicator;
 
 #if PATHTESTER_DEBUG_LOG
     BasicLogger myLogger = new BasicLogger("PATHTEST");
@@ -182,22 +178,16 @@ public class PathfindTester : MonoBehaviour {
                             }
                         }
                     }
-					//Debug.Log("No path found!");
-					srd.PathFound = false;
+                    srd.PathFound = false;
+#if PATHTESTER_DEBUG_LOG
+					Debug.Log("No path found!");
+#endif
 					break;
 				}
 				srd.PathFound = true;
 				/* ********* */
 				List<MapSquare> pathList = new List<MapSquare>(path);
 				pathList.Reverse();
-                //if (ThePathfinder.AgentBelief.Hierarchical) {
-                //    pathList = ExpandHierarchicalPath(pathList,srd);
-                //    if (pathList==null) {
-                //        //Debug.Log("No path found!");
-                //        srd.PathFound = false;
-                //        break;
-                //    }
-                //}
                 ExecutionError = false;
                 if (ThePathfinder.AgentBelief.Hierarchical) {
                     yield return StartCoroutine(ExecuteHierarchicalPath(pathList));
@@ -214,27 +204,6 @@ public class PathfindTester : MonoBehaviour {
 		myLogger.Log("TEST COMPLETED");
 #endif
 	}
-
-    //public List<MapSquare> ExpandHierarchicalPath(List<MapSquare> old) {
-    //    var result = new List<MapSquare>();
-    //    result.Add(old[0]);
-    //    //string log = "" + old[0];
-    //    for (int i=0;i<old.Count-1;i++) {
-    //        //log += " : " + old[i+1];
-    //        Path<MapSquare> p = ThePathfinder.PathFindOnRealMap(old[i],old[i+1]);
-    //        srd.PathfindingTicks += AStar.ElapsedTime;
-    //        srd.ExploredNodes += AStar.ExpandedNodes;
-    //        srd.MaxMemoryUsage = Mathf.Max( srd.MaxMemoryUsage, AStar.MaxMemoryQueue);
-    //        if (p==null) return null;
-    //        List<MapSquare> tmp = new List<MapSquare>(p);
-    //        tmp.Reverse();
-    //        for (int j=1;j<tmp.Count;j++) {
-    //            result.Add(tmp[j]);
-    //        }
-    //    }
-    //    //Debug.Log(log);
-    //    return result;
-    //}
 
 	public IEnumerator ExecutePath(IList<MapSquare> pathList) {
 		bool mapInconsistency = false;
@@ -254,6 +223,7 @@ public class PathfindTester : MonoBehaviour {
                 lastSquare = currentPos;
                 break;
             }
+            AgentIndicator.GridPosition = new Vector2(nextPos.x, nextPos.y);
 			int nextPosArea = ThePathfinder.GameMap.Areas[nextPos.x,nextPos.y];
 			// If enter a new area, update all the portals in the area.
 			if (ThePathfinder.GameMap.Areas[currentPos.x,currentPos.y] != 
@@ -269,7 +239,8 @@ public class PathfindTester : MonoBehaviour {
 				break; 
 			}
 			stepIndex++;
-			yield return new WaitForEndOfFrame();
+			//yield return new WaitForEndOfFrame();
+            yield return new WaitForSeconds(0.1f);
 		}
 	}
 

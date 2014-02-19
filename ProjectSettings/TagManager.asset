@@ -41,3 +41,7 @@ TagManager:
     userID: 0
     uniqueID: 0
     locked: 0
+  - name: Agent
+    userID: 1
+    uniqueID: 3105936271
+    locked: 0
