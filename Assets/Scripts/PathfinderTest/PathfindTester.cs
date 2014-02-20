@@ -36,12 +36,6 @@ public class PathfindTester : MonoBehaviour {
 	public int ScrambleRate;
 
     /// <summary>
-    /// The frequency of belief reset for the agent.
-    /// </summary>
-	[Range(1,1000)]
-	public int BeliefResetRate;
-
-    /// <summary>
     /// A reference to the main pathfinder object.
     /// </summary>
     public Pathfinder ThePathfinder { get; private set; }
@@ -78,6 +72,7 @@ public class PathfindTester : MonoBehaviour {
     MapSquare lastSquare;
 
     public AgentPositioning AgentIndicator;
+    public AgentPositioning TargetIndicator;
 
 #if PATHTESTER_DEBUG_LOG
     BasicLogger myLogger = new BasicLogger("PATHTEST");
@@ -142,9 +137,9 @@ public class PathfindTester : MonoBehaviour {
             while (CurrentMapIteration < NumberOfRuns) {
 			//Debug.Log("Iteration " + counter);
                 if (CurrentMapIteration % ScrambleRate == 0) RandomStrategy.RandomizeWorldPortals(ThePathfinder.GameMap);
-                if (CurrentMapIteration % BeliefResetRate == 0) ThePathfinder.AgentBelief.CleanBelieves();
 			MapSquare currentPos = RandomFreePosition();
             MapSquare targetPos = RandomFreePosition();
+            TargetIndicator.GridPosition = new Vector2(targetPos.x, (ThePathfinder.GameMap.Height) - targetPos.y);
 			// Avoid Same Area Paths.
 			if (ThePathfinder.GameMap.Areas[currentPos.x,currentPos.y] == ThePathfinder.GameMap.Areas[targetPos.x,targetPos.y]
 			    && AvoidSameAreaPath) {

@@ -4,7 +4,14 @@ using RoomOfRequirement;
 
 public interface IMapBelief : IHasNeighbours<MapSquare> {
 
+    /// <summary>
+    /// A reference to the original map.
+    /// </summary>
     BDPMap Original { get; }
+
+    /// <summary>
+    /// Specify if the agent is hierarchical or not.
+    /// </summary>
 	bool Hierarchical {get; }
 	MapSquare CurrentTarget {get; set; }
 
