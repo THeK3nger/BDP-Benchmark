@@ -171,6 +171,7 @@ public class PathfindTester : MonoBehaviour {
                         float T = 10.0f;
                         float Tmin = 1.0f;
                         while (path == null || T > Tmin) {
+                            Debug.Log("Portal belief revision!");
                             belief.OpenOldPortals(T);
                             path = ThePathfinder.PathFind(currentPos, targetPos);
                             if (path == null) {
@@ -223,7 +224,7 @@ public class PathfindTester : MonoBehaviour {
                 lastSquare = currentPos;
                 break;
             }
-            AgentIndicator.GridPosition = new Vector2(nextPos.x, nextPos.y);
+            AgentIndicator.GridPosition = new Vector2(nextPos.x, (ThePathfinder.GameMap.Height) - nextPos.y);
 			int nextPosArea = ThePathfinder.GameMap.Areas[nextPos.x,nextPos.y];
 			// If enter a new area, update all the portals in the area.
 			if (ThePathfinder.GameMap.Areas[currentPos.x,currentPos.y] != 
