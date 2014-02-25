@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -45,7 +45,7 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 		return result;
 	}
 	
-	public void UpdateBelief (MapSquare ms, bool state) {
+	public bool UpdateBelief (MapSquare ms, bool state) {
 		if (portalSquares.ContainsKey(ms)) {
 			var pgs = Original.GetPortalGroupBySquare(ms);
 			if (pgs == null) {
@@ -58,8 +58,9 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 			}
 			int area = Original.Areas[ms.x,ms.y];
 			if (pgs.Count > 1) {
+                bool changed = portalSquares[ms] != state;
 				portalSquares[ms] = state;
-				return;
+				return changed;
 			}
 			foreach(Portal p in pgs[0].Portals) {
 				MapSquare pms = p[area];
@@ -76,6 +77,7 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 				portalSquares[pms] = state;
 			}
 		}
+        return false;
 	}
 
 	public IEnumerable<MapSquare> Neighbours (MapSquare node) {

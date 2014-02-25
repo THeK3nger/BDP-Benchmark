@@ -49,7 +49,6 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 		if (area == Original.Areas[CurrentTarget.x,CurrentTarget.y]) {
 			result.Add(CurrentTarget);
 		}
-//		}
 		return result;
 	}
 
@@ -73,16 +72,23 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 		return Original.PortalSquares.Count;
 	}
 
-	public void UpdateBelief (MapSquare ms, bool state) {
+	public bool UpdateBelief (MapSquare ms, bool state) {
 		var pgs = Original.GetPortalGroupBySquare(ms);
-		foreach (PortalGroup pg in pgs) {
-            UpdateBelief(pg, state);
+        bool changed = false;
+        foreach (PortalGroup pg in pgs) {
+            if (UpdateBelief(pg, state)) changed = true;
 		}
+        return changed;
 	}
 
-    public void UpdateBelief(PortalGroup pg, bool state) {
-        portalPassability[pg] = state;
+    public bool UpdateBelief(PortalGroup pg, bool state) {
+        bool changed = false;
+        if (portalPassability[pg] != state) {
+            portalPassability[pg] = state;
+            changed = true;
+        }
         portalTimestamp[pg] = Time.time;
+        return changed;
     }
 
 	public void ResetBelieves() {

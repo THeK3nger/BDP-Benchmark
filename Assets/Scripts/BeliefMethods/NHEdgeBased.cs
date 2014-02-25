@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -50,50 +50,42 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 		if (IsFree(ms.Left)) result.Add(ms.Left);
 		// Add right.
 		if (IsFree(ms.Right)) result.Add(ms.Right);
-//		Grid<int> areas = OriginalMap.Areas;
-//		if (areas[ms.x,ms.y] != areas[ms.Up.x,ms.Up.y] ||
-//		    areas[ms.x,ms.y] != areas[ms.Down.x,ms.Down.y] ||
-//		    areas[ms.x,ms.y] != areas[ms.Left.x,ms.Left.y] ||
-//		    areas[ms.x,ms.y] != areas[ms.Right.x,ms.Right.y]) 
-//		    {
-//			foreach (PortalGroup pg in portalPassability.Keys) {
-//				if (pg.Contains(ms) && !portalPassability[pg]) {
-//					if (pg.Contains(ms.Up)) result.Remove(ms.Up);
-//					if (pg.Contains(ms.Down)) result.Remove(ms.Down);
-//					if (pg.Contains(ms.Left)) result.Remove(ms.Left);
-//					if (pg.Contains(ms.Right)) result.Remove(ms.Right);
-//				}
-//			}
-//		}
 		return result;
 	}
 
-	public void UpdateBelief (MapSquare ms, bool state) {
+	public bool UpdateBelief (MapSquare ms, bool state) {
 		var pgs = Original.GetPortalGroupBySquare(ms);
+        bool changed = false;
 		foreach (PortalGroup pg in pgs) {
 			if (!state) {
+                changed = portalPassability[pg]; // It was true? If true, it is changed.
 				portalPassability[pg] = false;
 			} else {
 				foreach (Portal p in pg.Portals) {
 					if (p.LinkedSquares.First == ms) {
 						if (Original.IsFree (p.LinkedSquares.Second)) {
+                            changed = portalPassability[pg] != state;
 							portalPassability [pg] = true;
-							return;
+							return changed;
 						}
+                        changed = portalPassability[pg] != state;
 						portalPassability [pg] = false;
-						return;
+                        return changed;
 					}
 					if (p.LinkedSquares.Second == ms) {
 						if (Original.IsFree (p.LinkedSquares.First)) {
+                            changed = portalPassability[pg] != state;
 							portalPassability [pg] = true;
-							return;
+                            return changed;
 						}
+                        changed = portalPassability[pg] != state;
 						portalPassability [pg] = false;
-						return;
+                        return changed;
 					}
 				}
 			}
 		}
+        return changed;
 	}
 
 	public IEnumerable<MapSquare> Neighbours (MapSquare node) {

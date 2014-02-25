@@ -24,7 +24,8 @@ public interface IMapBelief : IHasNeighbours<MapSquare> {
 	/// <param name="pg">The updated portals.</param>
 	/// <param name="area">The curren agent area.</param>
 	/// <param name="state">Set the portal to <c>true</c> or <c>flase</c> state.</param>
-	void UpdateBelief(MapSquare ms, bool state);
+    /// <returns><c>true</c> if and only if someting is changed in the agent belief.</returns>
+	bool UpdateBelief(MapSquare ms, bool state);
 
 	int MemoryByteUsed();
 

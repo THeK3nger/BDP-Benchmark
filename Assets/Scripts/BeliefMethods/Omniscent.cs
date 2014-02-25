@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -38,8 +38,8 @@ public class Omniscent : MonoBehaviour, IMapBelief  {
 		return result;
 	}
 	
-	public void UpdateBelief (MapSquare ms, bool state) {
-
+	public bool UpdateBelief (MapSquare ms, bool state) {
+        return false;
 	}
 	
 	public IEnumerable<MapSquare> Neighbours (MapSquare node) {
