@@ -52,13 +52,13 @@ public class Pathfinder : MonoBehaviour {
         return path;
 	}
 
-	public Path<MapSquare> PathFindOnRealMap(MapSquare start, MapSquare target) {
+	public Path<MapSquare> PathFindOnRealMap(MapSquare start, MapSquare target, int area) {
         Path<MapSquare> path = AStar.FindPath<MapSquare>(
             Omniscient,
             start,
             target,
             MapSquare.Distance,
-            (ms) => { return MapSquare.Distance(ms, target); }
+            (ms) => { if (area == 0 || AgentBelief.Original.Areas[ms.x, ms.y] == area) return MapSquare.Distance(ms, target); else return 10000000; }
         );
         return path;
 	}

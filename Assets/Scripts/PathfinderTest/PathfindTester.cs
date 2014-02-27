@@ -302,7 +302,7 @@ public class PathfindTester : MonoBehaviour {
         while (!pathCompleted && !mapInconsistency) {
             nextHighLevelPos = pathList[stepIndex];
             // Expand the first step.
-            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos);
+            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, ThePathfinder.AgentBelief.Original.Areas[nextHighLevelPos.x,nextHighLevelPos.y]);
             if (path == null) {
                 ExecutionError = true;
                 //UpdateAllPortalInArea(currentHighLevelPos);
