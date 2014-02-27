@@ -68,7 +68,7 @@ public class MapRenderer : MonoBehaviour {
 		int currentArea;
 		for (int x = 0; x < baseMap.Width; x++) {
 			for (int y = 0; y < baseMap.Height; y++) {
-				currentArea = baseMap.Areas [x,y];
+                currentArea = BDPMap.Instance.GetArea(x, y);
 				if (currentArea == 0)
 					continue;
 				if (areaColor.ContainsKey (currentArea)) {

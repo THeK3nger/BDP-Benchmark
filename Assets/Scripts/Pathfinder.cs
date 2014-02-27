@@ -44,10 +44,6 @@ public class Pathfinder : MonoBehaviour {
 			MapSquare.Distance,
 			(ms) => { return MapSquare.Distance(ms,target); }
 		);
-        //if (AgentBelief.Hierarchical) {
-//            IMapHierarchicalBelief hAgent = (IMapHierarchicalBelief)AgentBelief;
-//            return hAgent.ExpandPath(path);
-//        }
         return path;
 	}
 
@@ -57,7 +53,7 @@ public class Pathfinder : MonoBehaviour {
             start,
             target,
             MapSquare.Distance,
-            (ms) => { if (area == 0 || BDPMap.Instance.Areas[ms.x, ms.y] == area) return MapSquare.Distance(ms, target); else return 10000000; }
+            (ms) => { if (area == 0 || BDPMap.Instance.GetArea(ms) == area) return MapSquare.Distance(ms, target); else return 10000000; }
         );
         return path;
 	}

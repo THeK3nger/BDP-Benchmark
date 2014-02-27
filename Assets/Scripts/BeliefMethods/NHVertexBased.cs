@@ -50,13 +50,13 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 			var pgs = Original.GetPortalGroupBySquare(ms);
 			if (pgs == null) {
 				Debug.LogError(String.Format("No Portal Group for square {0}",ms));
-				Debug.Log(Original.PortalSquares.ContainsKey(ms));
+				//Debug.Log(Original.PortalSquares.ContainsKey(ms));
 				Debug.Log(portalSquares.ContainsKey(ms));
 				Debug.Log(state);
 				Debug.Log(ms);
 				Original.PrintStateAround(ms,4);
 			}
-			int area = Original.Areas[ms.x,ms.y];
+			int area = BDPMap.Instance.GetArea(ms);
 			if (pgs.Count > 1) {
                 bool changed = portalSquares[ms] != state;
 				portalSquares[ms] = state;
@@ -85,12 +85,12 @@ public class NHVertexBased : MonoBehaviour, IMapBelief  {
 	}
 
 	public int MemoryByteUsed () {
-		return Original.PortalSquares.Count;
+		return BDPMap.Instance.PortalsNumber;
 	}
 
 	public void CleanBelieves () {
 		// Initialize Internal Representation
-		foreach (MapSquare ms in Original.PortalSquares.Keys) {
+		foreach (MapSquare ms in BDPMap.Instance.PortalSquares) {
 			if (portalSquares.ContainsKey(ms)) {
 				portalSquares[ms] = true;
 			} else {

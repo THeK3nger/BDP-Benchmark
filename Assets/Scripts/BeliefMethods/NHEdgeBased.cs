@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 public class NHEdgeBased : MonoBehaviour, IMapBelief {
 
-    public BDPMap OriginalMap;
 	public bool Hierarchical {get { return false; } }
 	public MapSquare CurrentTarget { get; set; }
 
@@ -21,15 +20,15 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 	}
 
 	public bool IsFree (MapSquare ms) {
-		if (Original.PortalSquares.ContainsKey(ms)) {
-			var pgs = Original.GetPortalGroupBySquare(ms);
+		if (BDPMap.Instance.IsPortalSquare(ms)) {
+            var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
 			foreach (PortalGroup pg in pgs) {
 				if (portalPassability[pg]) {
 					return true;
 				}
 			}
 		}
-		return Original.IsFree(ms);
+        return BDPMap.Instance.IsFree(ms);
 	}
 
 	public bool IsFree (int x, int y) {
@@ -54,7 +53,7 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 	}
 
 	public bool UpdateBelief (MapSquare ms, bool state) {
-		var pgs = Original.GetPortalGroupBySquare(ms);
+        var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
         bool changed = false;
 		foreach (PortalGroup pg in pgs) {
 			if (!state) {
@@ -63,7 +62,7 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 			} else {
 				foreach (Portal p in pg.Portals) {
 					if (p.LinkedSquares.First == ms) {
-						if (Original.IsFree (p.LinkedSquares.Second)) {
+                        if (BDPMap.Instance.IsFree(p.LinkedSquares.Second)) {
                             changed = portalPassability[pg] != state;
 							portalPassability [pg] = true;
 							return changed;
@@ -73,7 +72,7 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
                         return changed;
 					}
 					if (p.LinkedSquares.Second == ms) {
-						if (Original.IsFree (p.LinkedSquares.First)) {
+                        if (BDPMap.Instance.IsFree(p.LinkedSquares.First)) {
                             changed = portalPassability[pg] != state;
 							portalPassability [pg] = true;
                             return changed;
@@ -92,18 +91,12 @@ public class NHEdgeBased : MonoBehaviour, IMapBelief {
 		return GetNeighbours(node);
 	}
 
-    public BDPMap Original {
-		get {
-			return OriginalMap;
-		}
-	}
-
 	public int MemoryByteUsed () {
 		return portalPassability.Count;
 	}
 
 	public void CleanBelieves () {
-		foreach (PortalGroup pg in Original.PortalConnectivity.Vertices) {
+        foreach (PortalGroup pg in BDPMap.Instance.PortalConnectivity.Vertices) {
 			if (portalPassability.ContainsKey(pg)) {
 				portalPassability[pg] = true;
 			} else {

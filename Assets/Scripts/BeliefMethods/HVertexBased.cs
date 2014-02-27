@@ -17,7 +17,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	}
 
 	public bool IsFree (MapSquare ms) {
-        if (BDPMap.Instance.PortalSquares.ContainsKey(ms)) {
+        if (BDPMap.Instance.IsPortalSquare(ms)) {
             var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
 			foreach (PortalGroup pg in pgs) {
 				if (portalPassability[pg]) {
@@ -34,7 +34,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 
 	public List<MapSquare> GetNeighbours(MapSquare ms) {
 		List<MapSquare> result = new List<MapSquare>();
-        int area = BDPMap.Instance.Areas[ms.x, ms.y];
+        int area = BDPMap.Instance.GetArea(ms);
         var pgs = BDPMap.Instance.GetPortalGroupByAreas(area);
 		foreach (PortalGroup pg in pgs) {
 			if (portalPassability[pg]) {
@@ -43,7 +43,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 				if (p.LinkedAreas.Second == area) result.Add(p.LinkedSquares.First);
 			}
 		}
-        if (area == BDPMap.Instance.Areas[CurrentTarget.x, CurrentTarget.y]) {
+        if (area == BDPMap.Instance.GetArea(CurrentTarget)) {
 			result.Add(CurrentTarget);
 		}
 		return result;
@@ -66,7 +66,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	}
 
 	public int MemoryByteUsed () {
-        return BDPMap.Instance.PortalSquares.Count;
+        return BDPMap.Instance.PortalsNumber;
 	}
 
 	public bool UpdateBelief (MapSquare ms, bool state) {

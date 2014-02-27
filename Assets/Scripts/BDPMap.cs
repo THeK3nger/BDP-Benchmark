@@ -81,41 +81,21 @@ public class BDPMap : MonoSingleton<BDPMap>
 		}
 	}
 
-	/// <summary>
-	/// Gets the map.
-	/// </summary>
-	/// <value>The map.</value>
-	public Map2D Map {
-		get { return rawMap; }
-	}
-
-	/// <summary>
-	/// Gets the areas map.
-	/// </summary>
-	/// <value>The areas map.</value>
-	public Grid<int> Areas {
-		get { return areaMap; }
-	}
-
-	public UndirectedGraph<int> AreaConnectivity {
-		get {
-			return areaConnectivity;
-		}
-	}
-
 	public UndirectedLabeledGraph<PortalGroup, bool, double> PortalConnectivity {
 		get {
 			return portalConnectivity;
 		}
 	}
 
-	public Dictionary<MapSquare, bool> PortalSquares {
+	public Dictionary<MapSquare, bool>.KeyCollection PortalSquares {
 		get {
-			return portalSquares;
+			return portalSquares.Keys;
 		}
 	}
 
     public bool MapIsLoaded { private set; get; }
+
+    public int PortalsNumber { get { return portalSquares.Count;  } }
 
 #endregion
 
@@ -260,7 +240,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                  topArea = GetArea(x, y - 1);
                 MapSquare currentSquare = new MapSquare(x, y);
                 topSquare = new MapSquare(x, y - 1);
-                bool condOne = Map.IsFree(x, y) && topArea != currentArea && topArea != 0;
+                bool condOne = rawMap.IsFree(x, y) && topArea != currentArea && topArea != 0;
                 bool condTwo = !portalStrike || currentArea == GetArea(x - 1, y) && topArea == GetArea(x - 1, y - 1);
                 if (condOne && condTwo) {
                     pg.Add(new Portal(
@@ -300,7 +280,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                 leftArea = GetArea(x - 1, y);
                 MapSquare currentSquare = new MapSquare(x, y);
                 leftSquare = new MapSquare(x - 1, y);
-                bool condOne = Map.IsFree(x, y) && leftArea != currentArea && leftArea != 0;
+                bool condOne = rawMap.IsFree(x, y) && leftArea != currentArea && leftArea != 0;
                 bool condTwo = !portalStrike || currentArea == GetArea(x, y - 1) && leftArea == GetArea(x - 1, y - 1);
                 if (condOne && condTwo) {
                     pg.Add(new Portal(
@@ -448,7 +428,7 @@ public class BDPMap : MonoSingleton<BDPMap>
 	/// <returns>The area label of the <x,y> square.</returns>
 	/// <param name="x">The x coordinate.</param>
 	/// <param name="y">The y coordinate.</param>
-	int GetArea (int x, int y)
+	public int GetArea (int x, int y)
 	{
 		if (x >= Width || x < 0 || y >= Height || y < 0)
 			return 0;
@@ -508,6 +488,14 @@ public class BDPMap : MonoSingleton<BDPMap>
         return (areaMap[msA.x, msA.y] == areaMap[msB.x, msB.y]);
     }
 
+    public bool IsPortalSquare(MapSquare ms) {
+        return portalSquares.ContainsKey(ms);
+    }
+
+    public int GetArea(MapSquare ms) {
+        return GetArea(ms.x, ms.y);
+    }
+
     /// <summary>
     /// Debug function who prints an area of the map around a specific map square.
     /// </summary>
@@ -524,7 +512,7 @@ public class BDPMap : MonoSingleton<BDPMap>
 			result += y + " ";
 			for (int x=ms.x - range;x<ms.x+range;x++) {
 				if (IsFree(x,y)) {
-					result += " " + Areas[x,y];
+					result += " " + GetArea(x,y);
 				} else {
 					result += " @";
 				}

@@ -86,7 +86,6 @@ public class PathfindTester : MonoBehaviour {
     public int CurrentMapIteration { get; private set; }
 
     void Awake() {
-
         ThePathfinder = gameObject.GetComponent<Pathfinder>();
     }
 
@@ -98,7 +97,6 @@ public class PathfindTester : MonoBehaviour {
         AStar.CollectProfiling = true;
         LoadAllMaps();
         StartCoroutine(MainNHTestLoop());
-
     }
 
     /// <summary>
@@ -220,8 +218,7 @@ public class PathfindTester : MonoBehaviour {
     }
 
     private bool IsSameAreaPath(MapSquare currentPos, MapSquare targetPos) {
-        return BDPMap.Instance.Areas[currentPos.x, currentPos.y] == BDPMap.Instance.Areas[targetPos.x, targetPos.y]
-                            && AvoidSameAreaPath;
+        return BDPMap.Instance.GetArea(currentPos) == BDPMap.Instance.GetArea(targetPos) && AvoidSameAreaPath;
     }
 
     private Path<MapSquare> BeliefRevisionLoop(MapSquare currentPos, MapSquare targetPos, Path<MapSquare> path) {
@@ -261,10 +258,9 @@ public class PathfindTester : MonoBehaviour {
                 break;
             }
             AgentIndicator.GridPosition = new Vector2(nextPos.x, (BDPMap.Instance.Height) - nextPos.y);
-            int nextPosArea = BDPMap.Instance.Areas[nextPos.x, nextPos.y];
+            int nextPosArea = BDPMap.Instance.GetArea(nextPos);
             // If enter a new area, update all the portals in the area.
-            if (BDPMap.Instance.Areas[currentPos.x, currentPos.y] !=
-                nextPosArea) {
+            if (BDPMap.Instance.GetArea(currentPos) != nextPosArea) {
                 bool changed = UpdateAllPortalInArea(nextPos);
                 if (changed) {
 #if PATHTESTER_DEBUG_LOG
@@ -302,7 +298,7 @@ public class PathfindTester : MonoBehaviour {
         while (!pathCompleted && !mapInconsistency) {
             nextHighLevelPos = pathList[stepIndex];
             // Expand the first step.
-            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, BDPMap.Instance.Areas[nextHighLevelPos.x, nextHighLevelPos.y]);
+            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, BDPMap.Instance.GetArea(nextHighLevelPos));
             if (path == null) {
                 ExecutionError = true;
                 //UpdateAllPortalInArea(currentHighLevelPos);
@@ -326,34 +322,25 @@ public class PathfindTester : MonoBehaviour {
         }
     }
 
-    MapSquare RandomPosition() {
-        int x = r.Next(0, BDPMap.Instance.Width);
-        int y = r.Next(0, BDPMap.Instance.Height);
-        return new MapSquare(x, y);
-    }
-
     MapSquare RandomFreePosition() {
-        int chosenX = -1;
-        int chosenY = -1;
+        MapSquare chosenPos = null;
         int count = 1;
         for (int x = 0; x < BDPMap.Instance.Width; x++) {
             for (int y = 0; y < BDPMap.Instance.Height; y++) {
-                {
-                    if (BDPMap.Instance.IsFree(x, y) && !BDPMap.Instance.PortalSquares.ContainsKey(new MapSquare(x, y))) {
-                        if (r.Next(0, count) == 0) {
-                            chosenX = x;
-                            chosenY = y;
-                        }
-                        count++;
+                var tryPos = new MapSquare(x, y);
+                if (BDPMap.Instance.IsFree(tryPos) && !BDPMap.Instance.IsPortalSquare(tryPos)) {
+                    if (r.Next(0, count) == 0) {
+                        chosenPos = tryPos;
                     }
+                    count++;
                 }
             }
         }
-        return new MapSquare(chosenX, chosenY);
+        return chosenPos;
     }
 
     bool UpdateAllPortalInArea(MapSquare ms) {
-        int msArea = BDPMap.Instance.Areas[ms.x, ms.y];
+        int msArea = BDPMap.Instance.GetArea(ms);
         var pgs = BDPMap.Instance.GetPortalGroupByAreas(msArea);
         bool changed = false;
         foreach (PortalGroup pg in pgs) {
