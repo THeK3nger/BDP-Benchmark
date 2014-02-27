@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class Pathfinder : MonoBehaviour {
 
-    public BDPMap GameMap;
 	public IMapBelief AgentBelief;
 	public IMapBelief Omniscient;
 	public GameObject Agent;
@@ -28,10 +27,10 @@ public class Pathfinder : MonoBehaviour {
 
 	public double PGBeliefDistance(PortalGroup pg1, PortalGroup pg2) {
 		if (pg1 == pg2) return 0;
-		double d = GameMap.PortalConnectivity.GetEdgeLabel(pg1,pg2);
+        double d = BDPMap.Instance.PortalConnectivity.GetEdgeLabel(pg1, pg2);
 		if (d != 0 &&
-		    GameMap.PortalConnectivity.GetVertexLabel(pg1) &&
-		    GameMap.PortalConnectivity.GetVertexLabel(pg2)) {
+            BDPMap.Instance.PortalConnectivity.GetVertexLabel(pg1) &&
+            BDPMap.Instance.PortalConnectivity.GetVertexLabel(pg2)) {
 			return d;
 		}
 		return Mathf.Infinity;
@@ -58,7 +57,7 @@ public class Pathfinder : MonoBehaviour {
             start,
             target,
             MapSquare.Distance,
-            (ms) => { if (area == 0 || AgentBelief.Original.Areas[ms.x, ms.y] == area) return MapSquare.Distance(ms, target); else return 10000000; }
+            (ms) => { if (area == 0 || BDPMap.Instance.Areas[ms.x, ms.y] == area) return MapSquare.Distance(ms, target); else return 10000000; }
         );
         return path;
 	}

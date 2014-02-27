@@ -4,9 +4,6 @@ using System.Collections.Generic;
 
 public class Omniscent : MonoBehaviour, IMapBelief  {
 
-    public BDPMap OriginalMap;
-
-    public BDPMap Original { get { return OriginalMap; } }
 	public bool Hierarchical {get { return false; } }
 	public MapSquare CurrentTarget { get; set; }
 	
@@ -14,7 +11,7 @@ public class Omniscent : MonoBehaviour, IMapBelief  {
 	}
 	
 	public bool IsFree (MapSquare ms) {
-		return Original.IsFree(ms);
+        return BDPMap.Instance.IsFree(ms);
 	}
 	
 	public bool IsFree (int x, int y) {
@@ -47,7 +44,7 @@ public class Omniscent : MonoBehaviour, IMapBelief  {
 	}
 
 	public int MemoryByteUsed () {
-		return Original.Width*Original.Height;
+        return BDPMap.Instance.Width * BDPMap.Instance.Height;
 	}
 
 	public void CleanBelieves () {

@@ -27,19 +27,19 @@ public sealed class FixedTotalRandom : IPortalsRandomStrategy {
         r = new System.Random(Seed);
 	}
 
-    public override void RandomizeWorldPortals(BDPMap gameMap) {
-        foreach (PortalGroup pg in gameMap.PortalConnectivity.Vertices) {
+    public override void RandomizeWorldPortals() {
+        foreach (PortalGroup pg in BDPMap.Instance.PortalConnectivity.Vertices) {
             double ratioToss = r.NextDouble();
             if (ratioToss < StartingClosedAmount) {
                 double sideToss = r.NextDouble();
                 if (sideToss < 0.5) {
-                    gameMap.SetPortalGroup(pg, false, pg.LinkedAreas.First);
+                    BDPMap.Instance.SetPortalGroup(pg, false, pg.LinkedAreas.First);
                 } else {
-                    gameMap.SetPortalGroup(pg, false, pg.LinkedAreas.Second);
+                    BDPMap.Instance.SetPortalGroup(pg, false, pg.LinkedAreas.Second);
                 }
             } else {
-                gameMap.SetPortalGroup(pg, true, pg.LinkedAreas.First);
-                gameMap.SetPortalGroup(pg, true, pg.LinkedAreas.Second);
+                BDPMap.Instance.SetPortalGroup(pg, true, pg.LinkedAreas.First);
+                BDPMap.Instance.SetPortalGroup(pg, true, pg.LinkedAreas.Second);
             }
         }
     }

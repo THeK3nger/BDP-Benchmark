@@ -26,13 +26,13 @@ public class SwitchRandom : IPortalsRandomStrategy {
         r = new System.Random(Seed);
     }
 
-    public override void RandomizeWorldPortals(BDPMap gameMap) {
-        foreach (PortalGroup pg in gameMap.PortalConnectivity.Vertices) {
+    public override void RandomizeWorldPortals() {
+        foreach (PortalGroup pg in BDPMap.Instance.PortalConnectivity.Vertices) {
             double ratioToss = r.NextDouble();
             if (ratioToss < StartingClosedAmount) {
-                bool currentState = gameMap.GetPortalGroupState(pg, pg.LinkedAreas.First);
-                gameMap.SetPortalGroup(pg, !currentState, pg.LinkedAreas.First);
-                gameMap.SetPortalGroup(pg, !currentState, pg.LinkedAreas.Second);
+                bool currentState = BDPMap.Instance.GetPortalGroupState(pg, pg.LinkedAreas.First);
+                BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.First);
+                BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.Second);
             }
         }
     }

@@ -7,7 +7,7 @@ public abstract class IPortalsRandomStrategy : MonoBehaviour {
     /// Implement a strategy for world portal shuffling.
     /// </summary>
     /// <param name="gameMap">The GameMap to shuffle.</param>
-    public abstract void RandomizeWorldPortals(BDPMap gameMap);
+    public abstract void RandomizeWorldPortals();
 
     /// <summary>
     /// Return a randomness amount value for the given strategy.

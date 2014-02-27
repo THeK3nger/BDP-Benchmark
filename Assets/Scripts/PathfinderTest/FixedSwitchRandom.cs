@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -34,14 +34,14 @@ public class FixedSwitchRandom : IPortalsRandomStrategy {
         r = new System.Random(Seed);
     }
 
-    public override void RandomizeWorldPortals(BDPMap gameMap) {
+    public override void RandomizeWorldPortals() {
         // Select a random set of portals.
-        IEnumerable<PortalGroup> pp = gameMap.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Take(ScrambleAmount);
+        IEnumerable<PortalGroup> pp = BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Take(ScrambleAmount);
         // Switch that set.
         foreach (PortalGroup pg in pp) {
-            bool currentState = gameMap.GetPortalGroupState(pg, pg.LinkedAreas.First);
-            gameMap.SetPortalGroup(pg, !currentState, pg.LinkedAreas.First);
-            gameMap.SetPortalGroup(pg, !currentState, pg.LinkedAreas.Second);
+            bool currentState = BDPMap.Instance.GetPortalGroupState(pg, pg.LinkedAreas.First);
+            BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.First);
+            BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.Second);
         }
     }
 

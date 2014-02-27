@@ -6,6 +6,7 @@ using System.Reflection;
 using System;
 using UnityEngine;
 using RoomOfRequirement.Generic;
+using RoomOfRequirement.Architectural;
 
 /// <summary>
 /// Handle a map for a BDP approach.
@@ -20,7 +21,7 @@ using RoomOfRequirement.Generic;
 /// 
 /// The map is loaded by a text assets.
 /// </remarks>
-public class BDPMap : MonoBehaviour
+public class BDPMap : MonoSingleton<BDPMap>
 {
 
 #region PublicInterface

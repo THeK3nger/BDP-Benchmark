@@ -127,8 +127,8 @@ public class PathfindTester : MonoBehaviour {
         foreach (TextAsset txa in allMaps) {
             CurrentMapIndex++;
             /* Update the map and recompute the map. */
-            ThePathfinder.GameMap.MapFile = txa;
-            ThePathfinder.GameMap.ComputeMap();
+            BDPMap.Instance.MapFile = txa;
+            BDPMap.Instance.ComputeMap();
             ThePathfinder.AgentBelief.ResetBelieves();
 #if PATHTESTER_DEBUG_LOG
             Debug.Log(String.Format("Starting Iteration on map {0}",txa.name));
@@ -136,7 +136,7 @@ public class PathfindTester : MonoBehaviour {
             /* ************************************* */
             BenchmarkData bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
-            RandomStrategy.RandomizeWorldPortals(ThePathfinder.GameMap);
+            RandomStrategy.RandomizeWorldPortals();
             while (CurrentMapIteration < NumberOfRuns) {
 #if PATHTESTER_DEBUG_LOG
                 Debug.Log(String.Format("Computing Path {0} of {1}",CurrentMapIteration+1,NumberOfRuns));
@@ -146,12 +146,12 @@ public class PathfindTester : MonoBehaviour {
 #if PATHTESTER_DEBUG_LOG
                     Debug.Log("Randomizing Portals");
 #endif
-                    RandomStrategy.RandomizeWorldPortals(ThePathfinder.GameMap);
+                    RandomStrategy.RandomizeWorldPortals();
                 }
                 MapSquare currentPos = RandomFreePosition();
                 lastSquare = currentPos;
                 MapSquare targetPos = RandomFreePosition();
-                TargetIndicator.GridPosition = new Vector2(targetPos.x, (ThePathfinder.GameMap.Height) - targetPos.y);
+                TargetIndicator.GridPosition = new Vector2(targetPos.x, (BDPMap.Instance.Height) - targetPos.y);
                 // Avoid Same Area Paths.
                 if (IsSameAreaPath(currentPos, targetPos)) {
                     // Ignore Path. Repick.
@@ -220,7 +220,7 @@ public class PathfindTester : MonoBehaviour {
     }
 
     private bool IsSameAreaPath(MapSquare currentPos, MapSquare targetPos) {
-        return ThePathfinder.GameMap.Areas[currentPos.x, currentPos.y] == ThePathfinder.GameMap.Areas[targetPos.x, targetPos.y]
+        return BDPMap.Instance.Areas[currentPos.x, currentPos.y] == BDPMap.Instance.Areas[targetPos.x, targetPos.y]
                             && AvoidSameAreaPath;
     }
 
@@ -253,17 +253,17 @@ public class PathfindTester : MonoBehaviour {
         MapSquare nextPos;
         while (!pathCompleted && !mapInconsistency) {
             nextPos = pathList[stepIndex];
-            if (!ThePathfinder.GameMap.IsFree(nextPos)) {
+            if (!BDPMap.Instance.IsFree(nextPos)) {
                 bool changed;
                 srd.UpdateTicks += MethodProfiler.ProfileMethod(ThePathfinder.AgentBelief.UpdateBelief, nextPos, false, out changed);
                 ExecutionError = true;
                 lastSquare = currentPos;
                 break;
             }
-            AgentIndicator.GridPosition = new Vector2(nextPos.x, (ThePathfinder.GameMap.Height) - nextPos.y);
-            int nextPosArea = ThePathfinder.GameMap.Areas[nextPos.x, nextPos.y];
+            AgentIndicator.GridPosition = new Vector2(nextPos.x, (BDPMap.Instance.Height) - nextPos.y);
+            int nextPosArea = BDPMap.Instance.Areas[nextPos.x, nextPos.y];
             // If enter a new area, update all the portals in the area.
-            if (ThePathfinder.GameMap.Areas[currentPos.x, currentPos.y] !=
+            if (BDPMap.Instance.Areas[currentPos.x, currentPos.y] !=
                 nextPosArea) {
                 bool changed = UpdateAllPortalInArea(nextPos);
                 if (changed) {
@@ -302,7 +302,7 @@ public class PathfindTester : MonoBehaviour {
         while (!pathCompleted && !mapInconsistency) {
             nextHighLevelPos = pathList[stepIndex];
             // Expand the first step.
-            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, ThePathfinder.AgentBelief.Original.Areas[nextHighLevelPos.x,nextHighLevelPos.y]);
+            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, BDPMap.Instance.Areas[nextHighLevelPos.x, nextHighLevelPos.y]);
             if (path == null) {
                 ExecutionError = true;
                 //UpdateAllPortalInArea(currentHighLevelPos);
@@ -327,8 +327,8 @@ public class PathfindTester : MonoBehaviour {
     }
 
     MapSquare RandomPosition() {
-        int x = r.Next(0, ThePathfinder.GameMap.Width);
-        int y = r.Next(0, ThePathfinder.GameMap.Height);
+        int x = r.Next(0, BDPMap.Instance.Width);
+        int y = r.Next(0, BDPMap.Instance.Height);
         return new MapSquare(x, y);
     }
 
@@ -336,10 +336,10 @@ public class PathfindTester : MonoBehaviour {
         int chosenX = -1;
         int chosenY = -1;
         int count = 1;
-        for (int x = 0; x < ThePathfinder.GameMap.Width; x++) {
-            for (int y = 0; y < ThePathfinder.GameMap.Height; y++) {
+        for (int x = 0; x < BDPMap.Instance.Width; x++) {
+            for (int y = 0; y < BDPMap.Instance.Height; y++) {
                 {
-                    if (ThePathfinder.GameMap.IsFree(x, y) && !ThePathfinder.GameMap.PortalSquares.ContainsKey(new MapSquare(x, y))) {
+                    if (BDPMap.Instance.IsFree(x, y) && !BDPMap.Instance.PortalSquares.ContainsKey(new MapSquare(x, y))) {
                         if (r.Next(0, count) == 0) {
                             chosenX = x;
                             chosenY = y;
@@ -353,8 +353,8 @@ public class PathfindTester : MonoBehaviour {
     }
 
     bool UpdateAllPortalInArea(MapSquare ms) {
-        int msArea = ThePathfinder.GameMap.Areas[ms.x, ms.y];
-        var pgs = ThePathfinder.GameMap.GetPortalGroupByAreas(msArea);
+        int msArea = BDPMap.Instance.Areas[ms.x, ms.y];
+        var pgs = BDPMap.Instance.GetPortalGroupByAreas(msArea);
         bool changed = false;
         foreach (PortalGroup pg in pgs) {
             Portal p = pg.NearestPortal(ms);
@@ -363,7 +363,7 @@ public class PathfindTester : MonoBehaviour {
             bool tmpChange;
             srd.UpdateTicks += MethodProfiler.ProfileMethod(ThePathfinder.AgentBelief.UpdateBelief,
                                                             updateSquare,
-                                                            ThePathfinder.GameMap.IsFree(updateSquare),
+                                                            BDPMap.Instance.IsFree(updateSquare),
                                                             out tmpChange);
             if (tmpChange) changed = true;
         }

@@ -4,9 +4,6 @@ using System.Collections.Generic;
 
 public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 
-    public BDPMap OriginalMap;
-
-    public BDPMap Original { get { return OriginalMap; } }
 	public bool Hierarchical {get { return true; } }
 	public MapSquare CurrentTarget { get; set; }
 
@@ -20,15 +17,15 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	}
 
 	public bool IsFree (MapSquare ms) {
-		if (Original.PortalSquares.ContainsKey(ms)) {
-			var pgs = Original.GetPortalGroupBySquare(ms);
+        if (BDPMap.Instance.PortalSquares.ContainsKey(ms)) {
+            var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
 			foreach (PortalGroup pg in pgs) {
 				if (portalPassability[pg]) {
 					return true;
 				}
 			}
 		}
-		return Original.IsFree(ms);
+        return BDPMap.Instance.IsFree(ms);
 	}
 	
 	public bool IsFree (int x, int y) {
@@ -37,8 +34,8 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 
 	public List<MapSquare> GetNeighbours(MapSquare ms) {
 		List<MapSquare> result = new List<MapSquare>();
-		int area = Original.Areas[ms.x,ms.y];
-		var pgs = Original.GetPortalGroupByAreas(area);
+        int area = BDPMap.Instance.Areas[ms.x, ms.y];
+        var pgs = BDPMap.Instance.GetPortalGroupByAreas(area);
 		foreach (PortalGroup pg in pgs) {
 			if (portalPassability[pg]) {
 				Portal p = pg.NearestPortal(ms);
@@ -46,7 +43,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 				if (p.LinkedAreas.Second == area) result.Add(p.LinkedSquares.First);
 			}
 		}
-		if (area == Original.Areas[CurrentTarget.x,CurrentTarget.y]) {
+        if (area == BDPMap.Instance.Areas[CurrentTarget.x, CurrentTarget.y]) {
 			result.Add(CurrentTarget);
 		}
 		return result;
@@ -57,7 +54,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	}
 
 	public void CleanBelieves () {
-		foreach (PortalGroup pg in Original.PortalConnectivity.Vertices) {
+        foreach (PortalGroup pg in BDPMap.Instance.PortalConnectivity.Vertices) {
 			if (portalPassability.ContainsKey(pg)) {
 				portalPassability[pg] = true;
                 portalTimestamp[pg] = Time.time;
@@ -69,11 +66,11 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief {
 	}
 
 	public int MemoryByteUsed () {
-		return Original.PortalSquares.Count;
+        return BDPMap.Instance.PortalSquares.Count;
 	}
 
 	public bool UpdateBelief (MapSquare ms, bool state) {
-		var pgs = Original.GetPortalGroupBySquare(ms);
+        var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
         bool changed = false;
         foreach (PortalGroup pg in pgs) {
             if (UpdateBelief(pg, state)) changed = true;
