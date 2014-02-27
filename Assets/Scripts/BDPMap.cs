@@ -493,6 +493,20 @@ public class BDPMap : MonoBehaviour
 		return null;
 	}
 
+    public List<PortalGroup> GetAdjacentPortalGropus(PortalGroup pg) {
+        return portalConnectivity.GetNeighbours(pg);
+    }
+
+    /// <summary>
+    /// Check if two tiles lie in the same area.
+    /// </summary>
+    /// <param name="msA">The first tile.</param>
+    /// <param name="msB">The second tile.</param>
+    /// <returns>Return <c>true</c> is msA and msB lie in the same area. <c>false</c> otherwise. </returns>
+    public bool HaveSameArea(MapSquare msA, MapSquare msB) {
+        return (areaMap[msA.x, msA.y] == areaMap[msB.x, msB.y]);
+    }
+
     /// <summary>
     /// Debug function who prints an area of the map around a specific map square.
     /// </summary>

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System;
@@ -229,12 +229,38 @@ public class PortalGroup : ISerializable {
 		return false;
 	}
 
+    /// <summary>
+    /// Check if the portal group is a dummy portal group.
+    /// </summary>
+    /// <returns></returns>
+    public bool IsDummy() {
+        return (this.LinkedAreas.First == this.LinkedAreas.Second);
+    }
+
+    public static int CommonArea(PortalGroup pgA,PortalGroup pgB) {
+        if (pgA.LinkedAreas.First == pgB.LinkedAreas.First) return pgA.LinkedAreas.First;
+        if (pgA.LinkedAreas.First == pgB.LinkedAreas.Second) return pgA.LinkedAreas.First;
+        if (pgA.LinkedAreas.Second == pgB.LinkedAreas.First) return pgA.LinkedAreas.Second;
+        if (pgA.LinkedAreas.Second == pgB.LinkedAreas.Second) return pgA.LinkedAreas.Second;
+        return -1;
+    }
+
 	/// <summary>
 	/// Compute the distance between the specified pg1 and pg2.
 	/// </summary>
 	/// <param name="pg1">Pg1.</param>
 	/// <param name="pg2">Pg2.</param>
 	public static double Distance(PortalGroup pg1, PortalGroup pg2) {
+        // Check if it is a dummy pg
+        if (pg1.IsDummy() && pg2.IsDummy()) {
+            return MapSquare.Distance(pg1.portals[0].LinkedSquares.First, pg2.portals[0].LinkedSquares.First);
+        }
+        if (pg1.IsDummy()) {
+            return PortalGroup.Distance(pg2, pg1.portals[0].LinkedSquares.First);
+        }
+        if (pg2.IsDummy()) {
+            return PortalGroup.Distance(pg1, pg2.portals[0].LinkedSquares.First);
+        }
 		return (pg1.MidPoint-pg2.MidPoint).magnitude;
 	}
 
