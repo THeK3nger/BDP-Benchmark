@@ -1,12 +1,13 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using RoomOfRequirement.Architectural;
 
 /// <summary>
 /// Implement a rendering component for a BDPMap map.
 /// </summary>
 [RequireComponent(typeof(BDPMap))]
-public class MapRenderer : MonoBehaviour {
+public class MapRenderer : MonoSingleton<MapRenderer> {
 	
 	/// <summary>
 	/// The canvas tilemap.
@@ -14,16 +15,21 @@ public class MapRenderer : MonoBehaviour {
 	public tk2dTileMap Tilemap;
 
     /// <summary>
-    /// The original BDPMap map.
+    /// The origin of the grid;
     /// </summary>
-    BDPMap baseMap;
+    public Vector2 Origin;
+
+    /// <summary>
+    /// The size of a grid square;
+    /// </summary>
+    public float CellSize;
+
 
 	// Use this for initialization
 	void Start () {
 		if (Tilemap == null) {
 			Debug.LogError("TileMap is not set in the inspector!");
 		}
-        baseMap = GetComponent<BDPMap>();
         StartCoroutine(DrawCallback());
 	}
 	
@@ -34,7 +40,7 @@ public class MapRenderer : MonoBehaviour {
 	IEnumerator DrawCallback() {
         while (true) {
             yield return new WaitForSeconds(0.1f);
-            if (baseMap.MapIsLoaded) {
+            if (BDPMap.Instance.MapIsLoaded) {
                 DrawAreaMap();
                 DrawMap();
             }
@@ -46,10 +52,10 @@ public class MapRenderer : MonoBehaviour {
 	/// </summary>
 	public void DrawMap ()
 	{
-		for (int x = 0; x < baseMap.Width; x++) {
-			for (int y = 0; y < baseMap.Height; y++) {
-				if (!baseMap.IsFree(x,y)) {
-					Tilemap.SetTile (x, baseMap.Height - y, 0, 0);
+        for (int x = 0; x < BDPMap.Instance.Width; x++) {
+            for (int y = 0; y < BDPMap.Instance.Height; y++) {
+                if (!BDPMap.Instance.IsFree(x, y)) {
+                    Tilemap.SetTile(x, BDPMap.Instance.Height - y, 0, 0);
 				} else {
 					//Tilemap.SetTile (x, Height - y, 0, -1);
 				}
@@ -66,20 +72,26 @@ public class MapRenderer : MonoBehaviour {
 		int currentColor = 1;
 		var areaColor = new Dictionary<int, int> ();
 		int currentArea;
-		for (int x = 0; x < baseMap.Width; x++) {
-			for (int y = 0; y < baseMap.Height; y++) {
+        for (int x = 0; x < BDPMap.Instance.Width; x++) {
+            for (int y = 0; y < BDPMap.Instance.Height; y++) {
                 currentArea = BDPMap.Instance.GetArea(x, y);
 				if (currentArea == 0)
 					continue;
 				if (areaColor.ContainsKey (currentArea)) {
-					Tilemap.SetTile (x, baseMap.Height - y, 0, areaColor [currentArea]);
+                    Tilemap.SetTile(x, BDPMap.Instance.Height - y, 0, areaColor[currentArea]);
 				} else {
 					areaColor.Add (currentArea, currentColor + 1);
 					currentColor = (currentColor + 1) % 5;
-					Tilemap.SetTile (x, baseMap.Height - y, 0, areaColor [currentArea]);
+                    Tilemap.SetTile(x, BDPMap.Instance.Height - y, 0, areaColor[currentArea]);
 				}
 			}
 		}
 		Tilemap.Build ();
 	}
+
+    public Vector2 Grid2Cartesian(MapSquare ms) {
+        float x = Origin.x + (1.0f + ms.x) * 0.5f * CellSize;
+        float y = Origin.y + (1.0f + ms.y) * 0.5f * CellSize;
+        return new Vector2(x, y);
+    } 
 }

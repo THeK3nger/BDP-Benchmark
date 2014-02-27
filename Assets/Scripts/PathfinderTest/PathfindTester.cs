@@ -149,7 +149,7 @@ public class PathfindTester : MonoBehaviour {
                 MapSquare currentPos = RandomFreePosition();
                 lastSquare = currentPos;
                 MapSquare targetPos = RandomFreePosition();
-                TargetIndicator.GridPosition = new Vector2(targetPos.x, (BDPMap.Instance.Height) - targetPos.y);
+                TargetIndicator.GridPosition = new MapSquare(targetPos.x, (BDPMap.Instance.Height) - targetPos.y);
                 // Avoid Same Area Paths.
                 if (IsSameAreaPath(currentPos, targetPos)) {
                     // Ignore Path. Repick.
@@ -257,7 +257,7 @@ public class PathfindTester : MonoBehaviour {
                 lastSquare = currentPos;
                 break;
             }
-            AgentIndicator.GridPosition = new Vector2(nextPos.x, (BDPMap.Instance.Height) - nextPos.y);
+            AgentIndicator.GridPosition = new MapSquare(nextPos.x, (BDPMap.Instance.Height) - nextPos.y);
             int nextPosArea = BDPMap.Instance.GetArea(nextPos);
             // If enter a new area, update all the portals in the area.
             if (BDPMap.Instance.GetArea(currentPos) != nextPosArea) {
