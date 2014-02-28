@@ -149,7 +149,8 @@ public class PathfindTester : MonoBehaviour {
                 MapSquare currentPos = RandomFreePosition();
                 lastSquare = currentPos;
                 MapSquare targetPos = RandomFreePosition();
-                TargetIndicator.GridPosition = new MapSquare(targetPos.x, (BDPMap.Instance.Height) - targetPos.y);
+                Debug.Log(String.Format("From {0} to {1}", currentPos, targetPos));
+                TargetIndicator.GridPosition = new MapSquare(targetPos.x, targetPos.y);
                 // Avoid Same Area Paths.
                 if (IsSameAreaPath(currentPos, targetPos)) {
                     // Ignore Path. Repick.
@@ -248,6 +249,12 @@ public class PathfindTester : MonoBehaviour {
         MapSquare currentPos = pathList[0];
         MapSquare targetPos = pathList[pathList.Count - 1];
         MapSquare nextPos;
+        for (int i = 0; i < pathList.Count - 1; ++i) {
+            var start = MapRenderer.Instance.Grid2Cartesian(pathList[i]);
+            var end = MapRenderer.Instance.Grid2Cartesian(pathList[i + 1]);
+            Debug.DrawLine(new Vector3(start.x, start.y, 0), new Vector3(end.x, end.y, 0), Color.yellow, 2.0f);
+            Debug.Log(pathList[i] + " " + pathList[i + 1]);
+        }
         while (!pathCompleted && !mapInconsistency) {
             nextPos = pathList[stepIndex];
             if (!BDPMap.Instance.IsFree(nextPos)) {
@@ -257,7 +264,7 @@ public class PathfindTester : MonoBehaviour {
                 lastSquare = currentPos;
                 break;
             }
-            AgentIndicator.GridPosition = new MapSquare(nextPos.x, (BDPMap.Instance.Height) - nextPos.y);
+            AgentIndicator.GridPosition = new MapSquare(nextPos.x, nextPos.y);
             int nextPosArea = BDPMap.Instance.GetArea(nextPos);
             // If enter a new area, update all the portals in the area.
             if (BDPMap.Instance.GetArea(currentPos) != nextPosArea) {
@@ -281,7 +288,7 @@ public class PathfindTester : MonoBehaviour {
             }
             stepIndex++;
             //yield return new WaitForEndOfFrame();
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.5f);
         }
     }
 
@@ -295,6 +302,12 @@ public class PathfindTester : MonoBehaviour {
         MapSquare currentHighLevelPos = pathList[0];
         MapSquare targetSquare = pathList[pathList.Count - 1];
         MapSquare nextHighLevelPos;
+        for (int i = 0; i < pathList.Count-1; ++i) {
+            var start = MapRenderer.Instance.Grid2Cartesian(pathList[i]);
+            var end = MapRenderer.Instance.Grid2Cartesian(pathList[i+1]);
+            Debug.DrawLine(new Vector3(start.x,start.y,0),new Vector3(end.x,end.y,0),Color.red,2.0f);
+            Debug.Log(pathList[i] + " " + pathList[i + 1]);
+        }
         while (!pathCompleted && !mapInconsistency) {
             nextHighLevelPos = pathList[stepIndex];
             // Expand the first step.

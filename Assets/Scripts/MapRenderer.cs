@@ -90,8 +90,9 @@ public class MapRenderer : MonoSingleton<MapRenderer> {
 	}
 
     public Vector2 Grid2Cartesian(MapSquare ms) {
+        var fixedy = (BDPMap.Instance.Height) - ms.y;
         float x = Origin.x + (1.0f + ms.x) * 0.5f * CellSize;
-        float y = Origin.y + (1.0f + ms.y) * 0.5f * CellSize;
+        float y = Origin.y + (1.0f + fixedy) * 0.5f * CellSize;
         return new Vector2(x, y);
     } 
 }
