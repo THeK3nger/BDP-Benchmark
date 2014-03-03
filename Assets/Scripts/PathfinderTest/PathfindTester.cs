@@ -249,12 +249,7 @@ public class PathfindTester : MonoBehaviour {
         MapSquare currentPos = pathList[0];
         MapSquare targetPos = pathList[pathList.Count - 1];
         MapSquare nextPos;
-        for (int i = 0; i < pathList.Count - 1; ++i) {
-            var start = MapRenderer.Instance.Grid2Cartesian(pathList[i]);
-            var end = MapRenderer.Instance.Grid2Cartesian(pathList[i + 1]);
-            Debug.DrawLine(new Vector3(start.x, start.y, 0), new Vector3(end.x, end.y, 0), Color.yellow, 2.0f);
-            Debug.Log(pathList[i] + " " + pathList[i + 1]);
-        }
+        DrawDebugPath(pathList,Color.yellow);
         while (!pathCompleted && !mapInconsistency) {
             nextPos = pathList[stepIndex];
             if (!BDPMap.Instance.IsFree(nextPos)) {
@@ -292,6 +287,15 @@ public class PathfindTester : MonoBehaviour {
         }
     }
 
+    private static void DrawDebugPath(IList<MapSquare> pathList, Color color) {
+        for (int i = 0; i < pathList.Count - 1; ++i) {
+            var start = MapRenderer.Instance.Grid2Cartesian(pathList[i]);
+            var end = MapRenderer.Instance.Grid2Cartesian(pathList[i + 1]);
+            Debug.DrawLine(new Vector3(start.x, start.y, 0), new Vector3(end.x, end.y, 0), color, 2.0f);
+            Debug.Log(pathList[i] + " " + pathList[i + 1]);
+        }
+    }
+
     public IEnumerator ExecuteHierarchicalPath(IList<MapSquare> pathList) {
 #if PATHTESTER_DEBUG_LOG
         Debug.Log("Starting Hierarchical Path Execution");
@@ -302,12 +306,7 @@ public class PathfindTester : MonoBehaviour {
         MapSquare currentHighLevelPos = pathList[0];
         MapSquare targetSquare = pathList[pathList.Count - 1];
         MapSquare nextHighLevelPos;
-        for (int i = 0; i < pathList.Count-1; ++i) {
-            var start = MapRenderer.Instance.Grid2Cartesian(pathList[i]);
-            var end = MapRenderer.Instance.Grid2Cartesian(pathList[i+1]);
-            Debug.DrawLine(new Vector3(start.x,start.y,0),new Vector3(end.x,end.y,0),Color.red,2.0f);
-            Debug.Log(pathList[i] + " " + pathList[i + 1]);
-        }
+        DrawDebugPath(pathList, Color.red);
         while (!pathCompleted && !mapInconsistency) {
             nextHighLevelPos = pathList[stepIndex];
             // Expand the first step.
@@ -319,6 +318,7 @@ public class PathfindTester : MonoBehaviour {
                 break;
             }
             List<MapSquare> subPathList = new List<MapSquare>(path);
+            subPathList.Add(currentHighLevelPos);
             subPathList.Reverse();
             // --
             ExecutionError = false;
