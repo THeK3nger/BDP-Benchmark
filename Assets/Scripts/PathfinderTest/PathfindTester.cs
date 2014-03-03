@@ -310,8 +310,9 @@ public class PathfindTester : MonoBehaviour {
         while (!pathCompleted && !mapInconsistency) {
             nextHighLevelPos = pathList[stepIndex];
             // Expand the first step.
-            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, BDPMap.Instance.GetArea(nextHighLevelPos));
+            Path<MapSquare> path = ThePathfinder.PathFindOnRealMap(currentHighLevelPos, nextHighLevelPos, BDPMap.Instance.GetArea(currentHighLevelPos));
             if (path == null) {
+                Debug.Log("No low level path.");
                 ExecutionError = true;
                 //UpdateAllPortalInArea(currentHighLevelPos);
                 //UpdateAllPortalInArea(nextHighLevelPos);

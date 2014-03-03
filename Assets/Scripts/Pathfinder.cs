@@ -55,7 +55,7 @@ public class Pathfinder : MonoBehaviour {
             (ms) => {
                 List<MapSquare> SameAreaNeighbours = new List<MapSquare>();
                 foreach (MapSquare m in Omniscient.Neighbours(ms)) {
-                    if (BDPMap.Instance.GetArea(m) == area) {
+                    if (BDPMap.Instance.GetArea(m) == area || m == target) {
                         SameAreaNeighbours.Add(m);
                     }
                 }
