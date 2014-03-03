@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -30,9 +30,9 @@ namespace RoomOfRequirement.Search
 		/// <param name="estimate">Function to estimate the remaining cost for the goal.</param>
 		/// <typeparam name="TNode">Any class implement IHasNeighbours.</typeparam>
 		static public Path<TNode> FindPath<TNode> (
-		IHasNeighbours<TNode> dataStructure,
 		TNode start,
 		TNode destination,
+        Func<TNode,IEnumerable<TNode>> neighbours,
 		Func<TNode,TNode,double> distance,
 		Func<TNode, double> estimate)
 		{
@@ -68,7 +68,7 @@ namespace RoomOfRequirement.Search
 				}
 				closed.Add (path.LastStep);
 				expandedNodes++;
-				foreach (TNode n in dataStructure.Neighbours(path.LastStep)) {
+				foreach (TNode n in neighbours(path.LastStep)) {
 					double d = distance (path.LastStep, n);
 					if (n.Equals (destination))
 						d = 0;
