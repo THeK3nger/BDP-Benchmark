@@ -1,5 +1,6 @@
 using RoomOfRequirement.Search;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Pathfinder : MonoBehaviour {
 
@@ -38,9 +39,9 @@ public class Pathfinder : MonoBehaviour {
 
 	public Path<MapSquare> PathFind(MapSquare start, MapSquare target) {
 		Path<MapSquare> path = AStar.FindPath<MapSquare>(
-			AgentBelief,
 			start,
 			target,
+            AgentBelief.Neighbours,
 			MapSquare.Distance,
 			(ms) => { return MapSquare.Distance(ms,target); }
 		);
@@ -49,9 +50,17 @@ public class Pathfinder : MonoBehaviour {
 
 	public Path<MapSquare> PathFindOnRealMap(MapSquare start, MapSquare target, int area) {
         Path<MapSquare> path = AStar.FindPath<MapSquare>(
-            Omniscient,
             start,
             target,
+            (ms) => {
+                List<MapSquare> SameAreaNeighbours = new List<MapSquare>();
+                foreach (MapSquare m in Omniscient.Neighbours(ms)) {
+                    if (BDPMap.Instance.GetArea(m) == area) {
+                        SameAreaNeighbours.Add(m);
+                    }
+                }
+                return SameAreaNeighbours;
+            },
             MapSquare.Distance,
             (ms) => { if (area == 0 || BDPMap.Instance.GetArea(ms) == area) return MapSquare.Distance(ms, target); else return 10000000; }
         );
