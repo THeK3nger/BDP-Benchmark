@@ -183,7 +183,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
         var changed = false;
-        foreach (PortalGroup pg in pgs.Where(pg => this.UpdateBelief(pg, state)))
+        foreach (var pg in pgs.Where(pg => this.UpdateBelief(pg, state)))
         {
             changed = true;
         }
