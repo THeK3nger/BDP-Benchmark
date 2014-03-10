@@ -163,11 +163,11 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// <returns>
     /// The <see cref="Grid"/> containing the area partitioning of the map.
     /// </returns>
-    public static Grid<int> MapPartitioning(BDPMap bdpMap)
+    public void MapPartitioning()
     {
-        var result = new Grid<int>(bdpMap.Height, bdpMap.Width);
+        this.areaMap = new Grid<int>(Height, Width);
         var currentAreaLabel = 1;
-        var topMostFreeIdx = bdpMap.GetFirstFreeUnlabeled();
+        var topMostFreeIdx = GetFirstFreeUnlabeled();
 
         // While there are still unlabeled squares.
         while (topMostFreeIdx != null)
@@ -181,26 +181,26 @@ public class BDPMap : MonoSingleton<BDPMap>
                 var x = xleft;
 
                 // Fill the current horizontal line.
-                bdpMap.areaMap[x, y] = currentAreaLabel;
-                while (bdpMap.IsLabelFree(x + 1, y) && !bdpMap.IsLabelFree(x + 1, y - 1))
+                areaMap[x, y] = currentAreaLabel;
+                while (IsLabelFree(x + 1, y) && !IsLabelFree(x + 1, y - 1))
                 {
                     x++;
-                    bdpMap.areaMap[x, y] = currentAreaLabel;
+                    areaMap[x, y] = currentAreaLabel;
                 }
 
                 // If the line is smaller then the upper one, area is shrunk right.
-                if (bdpMap.areaMap[x + 1, y - 1] == currentAreaLabel)
+                if (areaMap[x + 1, y - 1] == currentAreaLabel)
                 {
                     shrunkR = true;
 
                     // Else, if it is already shrunk and try to get bigger, end the area.
                 }
-                else if (bdpMap.areaMap[x, y - 1] != currentAreaLabel && shrunkR)
+                else if (areaMap[x, y - 1] != currentAreaLabel && shrunkR)
                 {
-                    while (bdpMap.areaMap[x, y] == currentAreaLabel)
+                    while (areaMap[x, y] == currentAreaLabel)
                     {
                         // This while undo the last line.
-                        bdpMap.areaMap[x, y] = 0;
+                        areaMap[x, y] = 0;
                         x--;
                     }
 
@@ -210,36 +210,36 @@ public class BDPMap : MonoSingleton<BDPMap>
                 // Come back to the first square and go to the next line.
                 x = xleft;
                 y = y + 1;
-                if (y >= bdpMap.Height)
+                if (y >= Height)
                 {
                     break;
                 }
 
                 // If the square is not free, move to the right.
-                while (!bdpMap.IsLabelFree(x, y) && bdpMap.areaMap[x, y - 1] == currentAreaLabel)
+                while (!IsLabelFree(x, y) && areaMap[x, y - 1] == currentAreaLabel)
                 {
                     x++;
                 }
 
                 // If you can move to the left, move to the left.
-                while (bdpMap.IsLabelFree(x - 1, y) && !bdpMap.IsLabelFree(x - 1, y - 1))
+                while (IsLabelFree(x - 1, y) && !IsLabelFree(x - 1, y - 1))
                 {
                     x--;
                 }
 
                 // If the line is smaller then the upper one, area is shrunk left.
-                if (bdpMap.areaMap[x - 1, y - 1] == currentAreaLabel)
+                if (areaMap[x - 1, y - 1] == currentAreaLabel)
                 {
                     shrunkL = true;
                 }
-                else if (bdpMap.areaMap[x, y - 1] != currentAreaLabel && shrunkL)
+                else if (areaMap[x, y - 1] != currentAreaLabel && shrunkL)
                 {
                     // Else, if it is already shrunk and try to get bigger, end the area.
                     break;
                 }
 
                 // If you cannot find a valid free spot on this line, end the area.
-                if (!bdpMap.IsLabelFree(x, y))
+                if (!IsLabelFree(x, y))
                 {
                     break;
                 }
@@ -249,10 +249,8 @@ public class BDPMap : MonoSingleton<BDPMap>
 
             // Go to the next area.
             currentAreaLabel++;
-            topMostFreeIdx = bdpMap.GetFirstFreeUnlabeled();
+            topMostFreeIdx = GetFirstFreeUnlabeled();
         }
-
-        return result;
     }
 
     #endregion
@@ -264,7 +262,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     {
         MapIsLoaded = false;
         LoadMapFromFile();
-        this.areaMap = MapPartitioning(this);
+        MapPartitioning();
         ConnectivityGraph();
         MapIsLoaded = true;
     }
