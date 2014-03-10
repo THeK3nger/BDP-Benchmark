@@ -1,11 +1,23 @@
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using System;
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="FixedSwitchRandom.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   The fixed switch random.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
 using System.Linq;
 
-public class FixedSwitchRandom : IPortalsRandomStrategy {
+using UnityEngine;
 
+using Random = System.Random;
+
+/// <summary>
+/// The fixed switch random.
+/// </summary>
+public class FixedSwitchRandom : IPortalsRandomStrategy
+{
     /// <summary>
     /// Seed for the RNG.
     /// </summary>
@@ -14,7 +26,7 @@ public class FixedSwitchRandom : IPortalsRandomStrategy {
     /// <summary>
     /// An instance of the RNG.
     /// </summary>
-    System.Random r;
+    private Random r;
 
     /// <summary>
     /// The ratio of initial closed portals in the map.
@@ -27,25 +39,45 @@ public class FixedSwitchRandom : IPortalsRandomStrategy {
     /// </summary>
     public int ScrambleAmount = 2;
 
-    // Use this for initialization
-    void Start() {
+    /// <summary>
+    /// The start.
+    /// </summary>
+    private void Start()
+    {
         // Only one component of type IPortalRandomStrategy can exist in one object!
-        if (GetComponent<IPortalsRandomStrategy>() != null) Destroy(this);
-        r = new System.Random(Seed);
+        if (GetComponent<IPortalsRandomStrategy>() != null)
+        {
+            Destroy(this);
+        }
+
+        this.r = new Random(Seed);
     }
 
-    public override void RandomizeWorldPortals() {
+    /// <summary>
+    /// The randomize world portals.
+    /// </summary>
+    public override void RandomizeWorldPortals()
+    {
         // Select a random set of portals.
-        IEnumerable<PortalGroup> pp = BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Take(ScrambleAmount);
+        var pp = BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Take(ScrambleAmount);
+
         // Switch that set.
-        foreach (PortalGroup pg in pp) {
-            bool currentState = BDPMap.Instance.GetPortalGroupState(pg, pg.LinkedAreas.First);
+        foreach (var pg in pp)
+        {
+            var currentState = BDPMap.Instance.GetPortalGroupState(pg, pg.LinkedAreas.First);
             BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.First);
             BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.Second);
         }
     }
 
-    public override float GetRandomAmount() {
-        return ScrambleAmount;
+    /// <summary>
+    /// The get random amount.
+    /// </summary>
+    /// <returns>
+    /// The <see cref="float"/>.
+    /// </returns>
+    public override float GetRandomAmount()
+    {
+        return this.ScrambleAmount;
     }
 }

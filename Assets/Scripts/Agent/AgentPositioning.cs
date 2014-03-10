@@ -1,21 +1,39 @@
-using UnityEngine;
-using System.Collections;
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="AgentPositioning.cs" company="Davide Aversa">
+//   MIT
+// </copyright>
+// <summary>
+//   Defines the AgentPositioning component.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
-public class AgentPositioning : MonoBehaviour {
+using UnityEngine;
+
+/// <summary>
+/// The AgentPositioning component move the attaching object to the grid-position specified in public properties
+/// GridPosition.
+/// </summary>
+public class AgentPositioning : MonoBehaviour
+{
+    /// <summary>
+    /// Gets or sets the grid position.
+    /// </summary>
+    public MapSquare GridPosition { get; set; }
 
     /// <summary>
-    /// The agent position expressed in grid coordinates.
+    /// The start.
     /// </summary>
-    public MapSquare GridPosition;
-
-	// Use this for initialization
-	void Start () {
+    public void Start()
+    {
         GridPosition = new MapSquare(0, 0);
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    /// <summary>
+    /// The update.
+    /// </summary>
+    public void Update()
+    {
         var coord = MapRenderer.Instance.Grid2Cartesian(GridPosition);
         transform.position = new Vector3(coord.x, coord.y, 0);
-	}
+    }
 }
