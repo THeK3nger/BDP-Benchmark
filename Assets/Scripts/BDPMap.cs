@@ -61,11 +61,6 @@ public class BDPMap : MonoSingleton<BDPMap>
     private Grid<int> areaMap;
 
     /// <summary>
-    /// The portal connectivity.
-    /// </summary>
-    private UndirectedLabeledGraph<PortalGroup, bool, double> portalConnectivity;
-
-    /// <summary>
     /// The portal squares.
     /// </summary>
     private Dictionary<MapSquare, bool> portalSquares;
@@ -104,13 +99,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// <summary>
     /// Gets the portal connectivity.
     /// </summary>
-    public UndirectedLabeledGraph<PortalGroup, bool, double> PortalConnectivity
-    {
-        get
-        {
-            return portalConnectivity;
-        }
-    }
+    public UndirectedLabeledGraph<PortalGroup, bool, double> PortalConnectivity { get; private set; }
 
     /// <summary>
     /// Gets the portal squares.
@@ -278,7 +267,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </returns>
     public List<PortalGroup> GetAdjacentPortalGropus(PortalGroup pg)
     {
-        return portalConnectivity.GetNeighbours(pg);
+        return this.PortalConnectivity.GetNeighbours(pg);
     }
 
     /// <summary>
@@ -328,7 +317,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </param>
     public List<PortalGroup> GetPortalGroupByAreas(int area)
     {
-        return this.portalConnectivity.Vertices.Where(pg => pg.BelongTo(area)).ToList();
+        return this.PortalConnectivity.Vertices.Where(pg => pg.BelongTo(area)).ToList();
     }
 
     /// <summary>
@@ -345,7 +334,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </param>
     public List<PortalGroup> GetPortalGroupByAreas(int area1, int area2)
     {
-        return this.portalConnectivity.Vertices.Where(pg => pg.Connect(area1, area2)).ToList();
+        return this.PortalConnectivity.Vertices.Where(pg => pg.Connect(area1, area2)).ToList();
     }
 
     /// <summary>
@@ -550,7 +539,7 @@ public class BDPMap : MonoSingleton<BDPMap>
         var data = (Map2DSerialization)bformatter.Deserialize(stream);
         rawMap = new Map2D(data.RealMap);
         areaMap = data.AreaMap;
-        portalConnectivity = data.PortalConnectivity;
+        this.PortalConnectivity = data.PortalConnectivity;
         areaConnectivity = data.AreaConnectivity;
         stream.Close();
         Debug.Log("Reading Complete");
@@ -568,7 +557,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                        {
                            RealMap = this.rawMap.Map, 
                            AreaMap = this.areaMap, 
-                           PortalConnectivity = this.portalConnectivity, 
+                           PortalConnectivity = this.PortalConnectivity, 
                            AreaConnectivity = this.areaConnectivity
                        };
 
@@ -591,7 +580,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     {
         reversePortalDict = new Dictionary<MapSquare, List<PortalGroup>>();
         areaConnectivity = new UndirectedGraph<int>();
-        portalConnectivity = new UndirectedLabeledGraph<PortalGroup, bool, double>();
+        this.PortalConnectivity = new UndirectedLabeledGraph<PortalGroup, bool, double>();
         portalSquares = new Dictionary<MapSquare, bool>();
 
         // Column Scan
@@ -778,7 +767,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                     }
 
                     portalStrike = false;
-                    this.portalConnectivity.AddVertex(pg);
+                    this.PortalConnectivity.AddVertex(pg);
                     pg = new PortalGroup();
                 }
             }
@@ -791,17 +780,17 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </summary>
     private void FillPortalConnectivity()
     {
-        foreach (var pg1 in portalConnectivity.Vertices)
+        foreach (var pg1 in this.PortalConnectivity.Vertices)
         {
-            foreach (var pg2 in portalConnectivity.Vertices)
+            foreach (var pg2 in this.PortalConnectivity.Vertices)
             {
                 if (!pg1.IsLinkedWith(pg2))
                 {
                     continue;
                 }
 
-                this.portalConnectivity.AddEdge(pg1, pg2);
-                this.portalConnectivity.SetEdgeLabel(pg1, pg2, PortalGroup.Distance(pg1, pg2));
+                this.PortalConnectivity.AddEdge(pg1, pg2);
+                this.PortalConnectivity.SetEdgeLabel(pg1, pg2, PortalGroup.Distance(pg1, pg2));
             }
         }
     }
@@ -840,7 +829,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                     }
 
                     portalStrike = false;
-                    this.portalConnectivity.AddVertex(pg);
+                    this.PortalConnectivity.AddVertex(pg);
                     pg = new PortalGroup();
                 }
             }

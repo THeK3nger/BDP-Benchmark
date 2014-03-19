@@ -126,16 +126,13 @@ public class Pathfinder : MonoBehaviour
             AgentBelief.Neighbours,
             (m1, m2) =>
                 {
-                    List<PortalGroup> p1 = BDPMap.Instance.GetPortalGroupBySquare(m1);
-                    List<PortalGroup> p2 = BDPMap.Instance.GetPortalGroupBySquare(m2);
+                    var p1 = BDPMap.Instance.GetPortalGroupBySquare(m1);
+                    var p2 = BDPMap.Instance.GetPortalGroupBySquare(m2);
                     if (p1 != null && p2 != null)
                     {
                         return PGBeliefDistance(p1[0], p2[0]);
                     }
-                    else
-                    {
-                        return MapSquare.Distance(m1, m2);
-                    }
+                    return MapSquare.Distance(m1, m2);
                 }, 
             (ms) => MapSquare.Distance(ms, target));
         return path;
@@ -158,20 +155,12 @@ public class Pathfinder : MonoBehaviour
     /// </returns>
     public Path<MapSquare> PathFindOnRealMap(MapSquare start, MapSquare target, int area)
     {
-        Path<MapSquare> path = AStar.FindPath<MapSquare>(
+        var path = AStar.FindPath(
             start, 
             target, 
             (ms) => this.Omniscient.Neighbours(ms).Where(m => BDPMap.Instance.GetArea(m) == area || m == target).ToList(), 
             MapSquare.Distance, 
-            (ms) =>
-                {
-                    if (area == 0 || BDPMap.Instance.GetArea(ms) == area)
-                    {
-                        return MapSquare.Distance(ms, target);
-                    }
-
-                    return 10000000;
-                });
+            (ms) => MapSquare.Distance(ms, target));
         return path;
     }
 }

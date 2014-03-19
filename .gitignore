@@ -27,3 +27,5 @@ TK2DROOT.meta
 Assets/-tk2d.*
 Assets/UnityTestTools*
 *TestResults.xml*
+*.suo
+*.cache

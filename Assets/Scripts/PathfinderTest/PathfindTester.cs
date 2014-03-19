@@ -19,6 +19,8 @@ using System.Linq;
 using RoomOfRequirement.Logger;
 using RoomOfRequirement.Search;
 
+using UnityEditor;
+
 using UnityEngine;
 
 using Object = UnityEngine.Object;
@@ -68,7 +70,7 @@ public class PathfindTester : MonoBehaviour
     private readonly List<TextAsset> allMaps = new List<TextAsset>();
 
     /// <summary>
-    /// Gets a reference to a portal rondomizer algorithm.
+    /// Gets a reference to a portal randomizer algorithm.
     /// </summary>
     public IPortalsRandomStrategy RandomStrategy { get; private set; }
 
@@ -198,12 +200,17 @@ public class PathfindTester : MonoBehaviour
             /* Update the map and recompute the map. */
             BDPMap.Instance.MapFile = txa;
             BDPMap.Instance.ComputeMap();
+            while (!BDPMap.Instance.MapIsLoaded)
+            {
+                yield return new WaitForSeconds(0.5f);
+            }
+
             ThePathfinder.AgentBelief.ResetBelieves();
+
 #if PATHTESTER_DEBUG_LOG
             Debug.Log(string.Format("Starting Iteration on map {0}", txa.name));
 #endif
 
-            /* ************************************* */
             var bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
             RandomStrategy.RandomizeWorldPortals();
@@ -222,53 +229,45 @@ public class PathfindTester : MonoBehaviour
                     RandomStrategy.RandomizeWorldPortals();
                 }
 
-                var currentPos = RandomFreePosition();
-                lastSquare = currentPos;
-                var targetPos = RandomFreePosition();
-                Debug.Log(string.Format("From {0} to {1}", currentPos, targetPos));
-                AgentIndicator.GridPosition = new MapSquare(currentPos.x, currentPos.y);
-                TargetIndicator.GridPosition = new MapSquare(targetPos.x, targetPos.y);
-
-                // Avoid Same Area Paths.
-                if (IsSameAreaPath(currentPos, targetPos))
-                {
-                    // Ignore Path. Repick.
-                    continue;
-                }
+                this.lastSquare = this.RandomFreePosition();
+                var targetPos = this.DraftRandomTargetPos();
 
                 /* BENCHMARK */
-                InitializeSRD(currentPos, targetPos);
+                InitializeSRD(lastSquare, targetPos);
 
                 /* ********* */
-                UpdateAllPortalInArea(currentPos);
+                UpdateAllPortalInArea(lastSquare);
+
                 while (lastSquare != targetPos)
                 {
                     this.executionError = false;
 
-                    // while (ExecutionError) {
 #if PATHTESTER_DEBUG_LOG
                     Debug.Log(string.Format("Execution Step from {0} to {1}", lastSquare, targetPos));
 #endif
-                    currentPos = lastSquare;
+
                     if (ThePathfinder.AgentBelief.Hierarchical)
                     {
                         ThePathfinder.AgentBelief.CurrentTarget = targetPos;
                     }
 
                     Debug.Log("======= COMPUTE PATH ========");
-                    var path = ThePathfinder.PathFind(currentPos, targetPos);
+                    var path = ThePathfinder.PathFind(lastSquare, targetPos);
 
                     /* BENCHMARK */
                     UpdateSRD();
+
                     if (path == null)
                     {
+                        Debug.Log("No path found! Try to perform belief revision.");
                         if (ThePathfinder.AgentBelief.Hierarchical)
                         {
-                            path = BeliefRevisionLoop(currentPos, targetPos, path);
+                            path = BeliefRevisionLoop(lastSquare, targetPos);
                         }
 
                         if (path == null)
                         {
+                            Debug.Log("sdgbpsiugbpaireugbpairugbpiarugbpiarugbpaiurgbpairubgparugbpi");
                             srd.PathFound = false;
 #if PATHTESTER_DEBUG_LOG
                             Debug.Log("No path found!");
@@ -280,8 +279,8 @@ public class PathfindTester : MonoBehaviour
                     srd.PathFound = true;
 
                     /* ********* */
-                    var pathList = new List<MapSquare>(path);
-                    pathList.Reverse();
+                    var pathList = Path2MapSquareList(path);
+
                     if (ThePathfinder.AgentBelief.Hierarchical)
                     {
                         yield return StartCoroutine(ExecuteHierarchicalPath(pathList));
@@ -291,11 +290,11 @@ public class PathfindTester : MonoBehaviour
                         yield return StartCoroutine(ExecutePath(pathList));
                     }
 
-                    // Debug.Log(lastSquare.ToString() + " " + targetPos.ToString());
                 }
 
                 CurrentMapIteration++;
                 bd.RunsData.Add(srd);
+                yield return new WaitForSeconds(1.0f);
             }
 
             bd.PrintToFile();
@@ -304,6 +303,39 @@ public class PathfindTester : MonoBehaviour
 #if PATHTESTER_DEBUG_LOG
         myLogger.Log("TEST COMPLETED");
 #endif
+    }
+
+    /// <summary>
+    /// Transform a Path into a list.
+    /// </summary>
+    /// <param name="path">The input path.</param>
+    /// <returns>A list representation of the path.</returns>
+    private static List<MapSquare> Path2MapSquareList(Path<MapSquare> path)
+    {
+        var pathList = new List<MapSquare>(path);
+        pathList.Reverse();
+        return pathList;
+    }
+
+    /// <summary>
+    /// Draft a random multi-area target and starting location.
+    /// </summary>
+    /// <returns></returns>
+    private MapSquare DraftRandomTargetPos()
+    {
+        var targetPos = this.RandomFreePosition();
+        Debug.Log(string.Format("From {0} to {1}", this.lastSquare, targetPos));
+        this.AgentIndicator.GridPosition = new MapSquare(this.lastSquare.x, this.lastSquare.y);
+        this.TargetIndicator.GridPosition = new MapSquare(targetPos.x, targetPos.y);
+
+        // Avoid Same Area Paths.
+        while (this.IsSameAreaPath(this.lastSquare, targetPos))
+        {
+            // Ignore Path. Repick.
+            targetPos = this.RandomFreePosition();
+            this.TargetIndicator.GridPosition = new MapSquare(targetPos.x, targetPos.y);
+        }
+        return targetPos;
     }
 
     /// <summary>
@@ -363,11 +395,12 @@ public class PathfindTester : MonoBehaviour
     /// <returns>
     /// The <see cref="Path"/>.
     /// </returns>
-    private Path<MapSquare> BeliefRevisionLoop(MapSquare currentPos, MapSquare targetPos, Path<MapSquare> path)
+    private Path<MapSquare> BeliefRevisionLoop(MapSquare currentPos, MapSquare targetPos)
     {
 #if PATHTESTER_DEBUG_LOG
         Debug.Log("Portal belief revision!");
 #endif
+        Path<MapSquare> path = null;
         var belief = ThePathfinder.AgentBelief as IMapHierarchicalBelief;
         if (belief == null)
         {
@@ -495,13 +528,12 @@ public class PathfindTester : MonoBehaviour
 #if PATHTESTER_DEBUG_LOG
         Debug.Log("Starting Hierarchical Path Execution");
 #endif
-        var mapInconsistency = false;
-        // var pathCompleted = false;
+        // var mapInconsistency = false;
         var stepIndex = 1;
         var currentHighLevelPos = pathList[0];
         var targetSquare = pathList[pathList.Count - 1];
         DrawDebugPath(pathList, Color.red);
-        while (!mapInconsistency)
+        while (true)
         {
             var nextHighLevelPos = pathList[stepIndex];
 
@@ -515,9 +547,6 @@ public class PathfindTester : MonoBehaviour
                 Debug.Log("No low level path.");
                 UpdateAllPortalInArea(currentHighLevelPos);
                 this.executionError = true;
-
-                // UpdateAllPortalInArea(currentHighLevelPos);
-                // UpdateAllPortalInArea(nextHighLevelPos);
                 break;
             }
 
@@ -530,7 +559,8 @@ public class PathfindTester : MonoBehaviour
             if (this.executionError)
             {
                 Debug.Log("Error on ExecutePath.");
-                mapInconsistency = true;
+
+                // mapInconsistency = true;
                 break;
             }
 

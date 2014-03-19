@@ -150,24 +150,25 @@ public class Portal : ISerializable
     /// <param name="area">
     /// The area.
     /// </param>
+    /// <param name="reverse">If true, the indexer return the square opposite to the given area.</param>
     /// <returns>
     /// The <see cref="MapSquare"/>.
     /// </returns>
-    public MapSquare this[int area]
+    public MapSquare this[int area,bool reverse = false]
     {
         get
         {
-            if (LinkedAreas.First == area)
+            if (area != this.LinkedAreas.First && area != this.LinkedAreas.Second)
             {
-                return LinkedSquares.First;
+                return null;
             }
 
-            if (LinkedAreas.Second == area)
+            if (reverse)
             {
-                return this.LinkedSquares.Second;
+                return this.LinkedAreas.First == area ? this.LinkedSquares.Second : this.LinkedSquares.First;
             }
 
-            return null;
+            return this.LinkedAreas.First == area ? this.LinkedSquares.First : this.LinkedSquares.Second;
         }
     }
 

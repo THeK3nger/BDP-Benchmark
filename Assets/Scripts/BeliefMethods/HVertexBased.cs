@@ -11,6 +11,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 using UnityEngine;
 
@@ -98,23 +99,14 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// </returns>
     public List<MapSquare> GetNeighbours(MapSquare ms)
     {
+        var originalMap = BDPMap.Instance;
         var result = new List<MapSquare>();
-        var area = BDPMap.Instance.GetArea(ms);
-        var pgs = BDPMap.Instance.GetPortalGroupByAreas(area);
-        foreach (var p in from pg in pgs where this.portalPassability[pg] select pg.NearestPortal(ms))
-        {
-            if (p.LinkedAreas.First == area)
-            {
-                result.Add(p.LinkedSquares.Second);
-            }
+        var area = originalMap.GetArea(ms);
 
-            if (p.LinkedAreas.Second == area)
-            {
-                result.Add(p.LinkedSquares.First);
-            }
-        }
+        var pgs = originalMap.GetPortalGroupByAreas(area);
+        result.AddRange((from pg in pgs where this.portalPassability[pg] select pg.NearestPortal(ms)).Select(p => p[area, reverse: true]));
 
-        if (area == BDPMap.Instance.GetArea(CurrentTarget))
+        if (area == originalMap.GetArea(CurrentTarget) && !result.Contains(CurrentTarget))
         {
             result.Add(CurrentTarget);
         }
@@ -232,9 +224,9 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// </param>
     public void OpenOldPortals(float timeLimit)
     {
-        foreach (PortalGroup pg in this.portalPassability.Keys.Where(pg => this.portalTimestamp[pg] < timeLimit))
+        foreach (var key in this.portalTimestamp.Keys.ToList().Where(key => this.portalTimestamp[key] < timeLimit))
         {
-            this.UpdateBelief(pg, true);
+            UpdateBelief(key, false);
         }
     }
 }
