@@ -37,9 +37,9 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     public MapSquare CurrentTarget { get; set; }
 
     /// <summary>
-    /// The portal passability.
+    /// State of the portal group on a given area.
     /// </summary>
-    private readonly Dictionary<PortalGroup, bool> portalPassability = new Dictionary<PortalGroup, bool>();
+    private readonly Dictionary<Tuple<PortalGroup,int>,bool> portalGroupState = new Dictionary<Tuple<PortalGroup, int>, bool>();
 
     /// <summary>
     /// The portal timestamp.
@@ -68,7 +68,8 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
         }
 
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
-        return pgs.All(pg => this.portalPassability[pg]);
+        var area = BDPMap.Instance.GetArea(ms);
+        return pgs.All(pg => this.portalGroupState[this.PortalGroupKey(pg, area)]);
     }
 
     /// <summary>
@@ -104,7 +105,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
         var area = originalMap.GetArea(ms);
 
         var pgs = originalMap.GetPortalGroupByAreas(area);
-        result.AddRange((from pg in pgs where this.portalPassability[pg] select pg.NearestPortal(ms)).Select(p => p[area, reverse: true]));
+        result.AddRange((from pg in pgs where this.IsPassable(pg) select pg.NearestPortal(ms)).Select(p => p[area, reverse: true]));
 
         if (area == originalMap.GetArea(CurrentTarget) && !result.Contains(CurrentTarget))
         {
@@ -135,14 +136,15 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         foreach (var pg in BDPMap.Instance.PortalConnectivity.Vertices)
         {
-            if (portalPassability.ContainsKey(pg))
+            if (portalTimestamp.ContainsKey(pg))
             {
-                portalPassability[pg] = true;
+                this.FullPortalGroupStateUpdate(pg, true);
                 portalTimestamp[pg] = Time.time;
             }
             else
             {
-                portalPassability.Add(pg, true);
+                portalGroupState.Add(PortalGroupKey(pg, pg.LinkedAreas.First), true);
+                portalGroupState.Add(PortalGroupKey(pg, pg.LinkedAreas.Second), true);
                 portalTimestamp.Add(pg, Time.time);
             }
         }
@@ -175,7 +177,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
         var changed = false;
-        foreach (var pg in pgs.Where(pg => this.UpdateBelief(pg, state)))
+        foreach (var pg in pgs.Where(pg => this.UpdateBelief(pg, BDPMap.Instance.GetArea(ms), state)))
         {
             changed = true;
         }
@@ -189,18 +191,21 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// <param name="pg">
     /// The pg.
     /// </param>
+    /// <param name="area">
+    /// The square area.
+    /// </param>
     /// <param name="state">
     /// The state.
     /// </param>
     /// <returns>
     /// The <see cref="bool"/>.
     /// </returns>
-    public bool UpdateBelief(PortalGroup pg, bool state)
+    public bool UpdateBelief(PortalGroup pg, int area, bool state)
     {
         var changed = false;
-        if (portalPassability[pg] != state)
+        if (portalGroupState[this.PortalGroupKey(pg, area)] != state)
         {
-            portalPassability[pg] = state;
+            portalGroupState[this.PortalGroupKey(pg, area)] = state;
             changed = true;
         }
 
@@ -226,7 +231,39 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         foreach (var key in this.portalTimestamp.Keys.ToList().Where(key => this.portalTimestamp[key] < timeLimit))
         {
-            UpdateBelief(key, false);
+            this.FullPortalGroupStateUpdate(key, true);
         }
+    }
+
+    /// <summary>
+    /// Shorthand to get a key tuple for the portalGroupState data structure.
+    /// </summary>
+    /// <param name="pg">The portal group.</param>
+    /// <param name="area">The area.</param>
+    /// <returns>A key for the dictionary portalGroupState</returns>
+    private Tuple<PortalGroup, int> PortalGroupKey(PortalGroup pg, int area)
+    {
+        return new Tuple<PortalGroup, int>(pg, area);
+    }
+
+    /// <summary>
+    /// Check if a given PortalGroup is traversable or not.
+    /// </summary>
+    /// <param name="pg">The portal group.</param>
+    /// <returns>true if and only if the portal group is traversable.</returns>
+    private bool IsPassable(PortalGroup pg)
+    {
+        return portalGroupState[PortalGroupKey(pg, pg.LinkedAreas.First)]
+               && portalGroupState[PortalGroupKey(pg, pg.LinkedAreas.Second)];
+    }
+
+    /// <summary>
+    /// Set the given state to both side of the given portal group.
+    /// </summary>
+    /// <param name="pg">The given portal group.</param>
+    /// <param name="state">The desired state.</param>
+    private void FullPortalGroupStateUpdate(PortalGroup pg, bool state) {
+        this.portalGroupState[this.PortalGroupKey(pg, pg.LinkedAreas.First)] = state;
+        this.portalGroupState[this.PortalGroupKey(pg, pg.LinkedAreas.Second)] = state;
     }
 }
