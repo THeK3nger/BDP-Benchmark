@@ -214,6 +214,7 @@ public class PathfindTester : MonoBehaviour
             var bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
             RandomStrategy.RandomizeWorldPortals();
+            this.lastSquare = this.RandomFreePosition();
             while (CurrentMapIteration < NumberOfRuns)
             {
 #if PATHTESTER_DEBUG_LOG
@@ -229,7 +230,7 @@ public class PathfindTester : MonoBehaviour
                     RandomStrategy.RandomizeWorldPortals();
                 }
 
-                this.lastSquare = this.RandomFreePosition();
+                //this.lastSquare = this.RandomFreePosition();
                 var targetPos = this.DraftRandomTargetPos();
 
                 /* BENCHMARK */
@@ -378,6 +379,27 @@ public class PathfindTester : MonoBehaviour
     private bool IsSameAreaPath(MapSquare currentPos, MapSquare targetPos)
     {
         return BDPMap.Instance.GetArea(currentPos) == BDPMap.Instance.GetArea(targetPos) && AvoidSameAreaPath;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (!BDPMap.Instance.MapIsLoaded)
+        {
+            return;
+        }
+        for (var x = 0; x < BDPMap.Instance.Width; ++x)
+        {
+            for (var y = 0; y < BDPMap.Instance.Height; ++y)
+            {
+                if (!BDPMap.Instance.IsPortalSquare(new MapSquare(x, y)))
+                {
+                    continue;
+                }
+
+                Gizmos.color = this.ThePathfinder.AgentBelief.IsFree(new MapSquare(x, y)) ? Color.green : Color.red;
+                Gizmos.DrawSphere(MapRenderer.Instance.Grid2Cartesian(new MapSquare(x, y)), 0.3f);
+            }
+        }
     }
 
     /// <summary>
