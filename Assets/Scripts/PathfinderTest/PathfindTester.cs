@@ -32,6 +32,9 @@ using Random = System.Random;
 [RequireComponent(typeof(Pathfinder))]
 public class PathfindTester : MonoBehaviour
 {
+
+    public bool ShowPathAnimation = false;
+
     /// <summary>
     /// Seed for the RNG.
     /// </summary>
@@ -512,7 +515,10 @@ public class PathfindTester : MonoBehaviour
             stepIndex++;
 
             // yield return new WaitForEndOfFrame();
-            yield return new WaitForSeconds(0.5f);
+            if (ShowPathAnimation)
+            {
+                yield return new WaitForSeconds(0.5f);
+            }
         }
     }
 
