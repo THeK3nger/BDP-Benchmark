@@ -37,6 +37,8 @@ public class PathfindTester : MonoBehaviour
 
     public float PathStepInterval = 0.1f;
 
+    public int UpdateDepth = 1;
+
     /// <summary>
     /// Seed for the RNG.
     /// </summary>
@@ -657,21 +659,11 @@ public class PathfindTester : MonoBehaviour
         return chosenPos;
     }
 
-    /// <summary>
-    /// The update all portal in area.
-    /// </summary>
-    /// <param name="ms">
-    /// The ms.
-    /// </param>
-    /// <returns>
-    /// The <see cref="bool"/>.
-    /// </returns>
-    private bool UpdateAllPortalInArea(MapSquare ms)
-    {
+    private bool UpdateAllPortalInArea(MapSquare ms, int depth = 1) {
         var mapSquareArea = BDPMap.Instance.GetArea(ms);
         var pgs = BDPMap.Instance.GetPortalGroupByAreas(mapSquareArea);
         var changed = false;
-        foreach (var pg in pgs.Select(pg => pg.NearestPortal(ms)))
+        foreach (var pg in pgs.Select(pg => pg.NearestPortal(ms))) 
         {
             var updateSquareIn = pg[mapSquareArea];
             var updateSquareOut = pg[mapSquareArea, reverse: true];
@@ -683,16 +675,16 @@ public class PathfindTester : MonoBehaviour
 
             bool tmpChange;
             this.srd.UpdateTicks += MethodProfiler.ProfileMethod(
-                this.ThePathfinder.AgentBelief.UpdateBelief, 
-                updateSquareIn, 
-                BDPMap.Instance.IsFree(updateSquareIn), 
+                this.ThePathfinder.AgentBelief.UpdateBelief,
+                updateSquareIn,
+                BDPMap.Instance.IsFree(updateSquareIn),
                 out tmpChange);
             if (tmpChange)
             {
                 changed = true;
             }
 
-            if (!BDPMap.Instance.IsFree(updateSquareIn))
+            if (!BDPMap.Instance.IsFree(updateSquareIn)) 
             {
                 continue;
             }
@@ -703,6 +695,13 @@ public class PathfindTester : MonoBehaviour
                 BDPMap.Instance.IsFree(updateSquareOut),
                 out tmpChange);
             changed = changed || tmpChange;
+
+            if (depth < UpdateDepth) 
+            {
+                tmpChange = UpdateAllPortalInArea(updateSquareOut, depth + 1);
+                changed = changed || tmpChange;
+            }
+            
         }
 
         return changed;
