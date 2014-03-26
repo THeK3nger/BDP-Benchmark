@@ -1,0 +1,4 @@
+update_radius=1
+seed=200
+number_of_runs=200
+scramble_rate=2

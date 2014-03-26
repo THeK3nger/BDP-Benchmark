@@ -159,6 +159,25 @@ public class PathfindTester : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        var parameters = ParseParameters.ParseFile(Resources.Load<TextAsset>("parameters"));
+        foreach (var par in parameters.Keys)
+        {
+            switch (par)
+            {
+                case "update_radius":
+                    UpdateDepth = (int)parameters[par];
+                    break;
+                case "seed":
+                    Seed = (int)parameters[par];
+                    break;
+                case "number_of_runs":
+                    NumberOfRuns = (int)parameters[par];
+                    break;
+                case "scramble_rate":
+                    ScrambleRate = (int)parameters[par];
+                    break;
+            }
+        }
         // Set the seed to allow multiple test.
         r = new System.Random(Seed);
         RandomStrategy = GetComponent<IPortalsRandomStrategy>();
