@@ -229,7 +229,8 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// </param>
     public void OpenOldPortals(float timeLimit)
     {
-        foreach (var key in this.portalTimestamp.Keys.ToList().Where(key => this.portalTimestamp[key] < timeLimit))
+        var timeHorizion = Time.time - timeLimit;
+        foreach (var key in this.portalTimestamp.Keys.ToList().Where(key => this.portalTimestamp[key] < timeHorizion))
         {
             this.FullPortalGroupStateUpdate(key, true);
         }

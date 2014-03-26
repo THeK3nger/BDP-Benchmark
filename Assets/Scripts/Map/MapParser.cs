@@ -11,6 +11,8 @@
 
 namespace BDP.Map
 {
+    using System;
+
     using RoomOfRequirement.Generic;
 
     using UnityEngine;
@@ -31,15 +33,16 @@ namespace BDP.Map
         /// </returns>
         public static Map2D ParseMapFromString(string mapstring)
         {
-            var lines = mapstring.Split('\n');
+            var lines = mapstring.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
 
             // Parse map size.
             var lidx = 0; // Parsing line index
             var current = string.Empty;
             var height = 0;
             var width = 0;
-            while ("map" != current)
+            while (!current.StartsWith("map"))
             {
+                Debug.Log(current);
                 current = lines[lidx];
 
                 // Map Parameters, Ignore "type".
