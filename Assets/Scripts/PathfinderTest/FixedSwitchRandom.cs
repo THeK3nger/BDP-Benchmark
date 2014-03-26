@@ -37,7 +37,7 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     /// <summary>
     /// The amount of scrambled portals.
     /// </summary>
-    public int ScrambleAmount = 2;
+    public float ScrambleAmount = 2;
 
     /// <summary>
     /// The start.
@@ -45,12 +45,30 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     private void Start()
     {
         // Only one component of type IPortalRandomStrategy can exist in one object!
-        if (GetComponent<IPortalsRandomStrategy>() != null)
+        if (GetComponent<IPortalsRandomStrategy>() != this)
         {
             Destroy(this);
         }
 
         this.r = new Random(Seed);
+    }
+
+    public override void Init()
+    {
+        foreach (var pg in BDPMap.Instance.PortalConnectivity.Vertices) 
+        {
+            var ratioToss = r.NextDouble();
+            if (ratioToss < StartingClosedAmount)
+            {
+                var sideToss = r.NextDouble();
+                BDPMap.Instance.SetPortalGroup(pg, false, sideToss < 0.5 ? pg.LinkedAreas.First : pg.LinkedAreas.Second);
+            } 
+            else 
+            {
+                BDPMap.Instance.SetPortalGroup(pg, true, pg.LinkedAreas.First);
+                BDPMap.Instance.SetPortalGroup(pg, true, pg.LinkedAreas.Second);
+            }
+        }
     }
 
     /// <summary>
@@ -59,7 +77,12 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     public override void RandomizeWorldPortals()
     {
         // Select a random set of portals.
-        var pp = BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Take(ScrambleAmount);
+        var scrambleNumber = (int)Mathf.Floor(BDPMap.Instance.PortalConnectivity.Vertices.Count() * ScrambleAmount);
+        Debug.LogWarning(scrambleNumber);
+        Debug.LogWarning(ScrambleAmount);
+        var pp =
+            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next())
+                .Take(scrambleNumber);
 
         // Switch that set.
         foreach (var pg in pp)
@@ -79,5 +102,15 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     public override float GetRandomAmount()
     {
         return this.ScrambleAmount;
+    }
+
+    public override void SetRandomness(float value)
+    {
+        StartingClosedAmount = value;
+    }
+
+    public override void SetScrambleAmount(float value)
+    {
+        ScrambleAmount = value;
     }
 }

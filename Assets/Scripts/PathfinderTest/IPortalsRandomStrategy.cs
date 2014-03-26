@@ -15,4 +15,10 @@ public abstract class IPortalsRandomStrategy : MonoBehaviour {
     /// <returns></returns>
     public abstract float GetRandomAmount();
 
+    public abstract void SetRandomness(float value);
+
+    public abstract void SetScrambleAmount(float value);
+
+    public abstract void Init();
+
 }

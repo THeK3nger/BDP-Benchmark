@@ -159,6 +159,7 @@ public class PathfindTester : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        RandomStrategy = GetComponent<IPortalsRandomStrategy>();
         var parameters = ParseParameters.ParseFile(Resources.Load<TextAsset>("parameters"));
         foreach (var par in parameters.Keys)
         {
@@ -176,11 +177,16 @@ public class PathfindTester : MonoBehaviour
                 case "scramble_rate":
                     ScrambleRate = (int)parameters[par];
                     break;
+                case "initial_randomness":
+                    RandomStrategy.SetRandomness(parameters[par]);
+                    break;
+                case "scramble_amount":
+                    RandomStrategy.SetScrambleAmount(parameters[par]);
+                    break;
             }
         }
         // Set the seed to allow multiple test.
         r = new System.Random(Seed);
-        RandomStrategy = GetComponent<IPortalsRandomStrategy>();
         AStar.CollectProfiling = true;
         LoadAllMaps();
         StartCoroutine(MainNHTestLoop());
@@ -239,7 +245,7 @@ public class PathfindTester : MonoBehaviour
 
             var bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
-            RandomStrategy.RandomizeWorldPortals();
+            RandomStrategy.Init();
             this.lastSquare = this.RandomFreePosition();
             while (CurrentMapIteration < NumberOfRuns)
             {
@@ -267,6 +273,7 @@ public class PathfindTester : MonoBehaviour
                 UpdateAllPortalInArea(lastSquare);
 
                 int startTime = 0;
+                bool valid = true;
 
                 while (lastSquare != targetPos)
                 {
@@ -276,6 +283,7 @@ public class PathfindTester : MonoBehaviour
                     {
                         srd.PathFound = false;
                         Debug.Log("[MAINLOOP] No path found! Go to next pick.");
+                        valid = false;
                         break;
                     }
 
@@ -330,8 +338,11 @@ public class PathfindTester : MonoBehaviour
 
                 }
 
-                CurrentMapIteration++;
-                bd.RunsData.Add(srd);
+                if (valid)
+                {
+                    CurrentMapIteration++;
+                    bd.RunsData.Add(srd);
+                }
                 yield return new WaitForSeconds(0.1f);
             }
 
