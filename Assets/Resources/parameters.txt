@@ -2,5 +2,5 @@ update_radius=1
 seed=200
 number_of_runs=200
 scramble_rate=2
-initial_randomness=0.2
+initial_randomness=0.35
 scramble_amount=0.1

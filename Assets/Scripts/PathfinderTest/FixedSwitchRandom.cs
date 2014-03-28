@@ -78,18 +78,26 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     {
         // Select a random set of portals.
         var scrambleNumber = (int)Mathf.Floor(BDPMap.Instance.PortalConnectivity.Vertices.Count() * ScrambleAmount);
-        Debug.LogWarning(scrambleNumber);
-        Debug.LogWarning(ScrambleAmount);
-        var pp =
-            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next())
+        //Debug.LogWarning(scrambleNumber);
+        //Debug.LogWarning(ScrambleAmount);
+        var ppclosed =
+            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Where(p => !BDPMap.Instance.GetPortalGroupState(p,p.LinkedAreas.First))
+                .Take(scrambleNumber);
+        var ppopen =
+            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Where(p => !BDPMap.Instance.GetPortalGroupState(p,p.LinkedAreas.First))
                 .Take(scrambleNumber);
 
         // Switch that set.
-        foreach (var pg in pp)
+        foreach (var pg in ppclosed)
         {
-            var currentState = BDPMap.Instance.GetPortalGroupState(pg, pg.LinkedAreas.First);
-            BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.First);
-            BDPMap.Instance.SetPortalGroup(pg, !currentState, pg.LinkedAreas.Second);
+            BDPMap.Instance.SetPortalGroup(pg, true, pg.LinkedAreas.First);
+            BDPMap.Instance.SetPortalGroup(pg, true, pg.LinkedAreas.Second);
+        }
+
+        foreach (var pg in ppopen)
+        {
+            BDPMap.Instance.SetPortalGroup(pg, false, pg.LinkedAreas.First);
+            BDPMap.Instance.SetPortalGroup(pg, false, pg.LinkedAreas.Second);
         }
     }
 

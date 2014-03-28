@@ -105,7 +105,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
         var area = originalMap.GetArea(ms);
 
         var pgs = originalMap.GetPortalGroupByAreas(area);
-        result.AddRange((from pg in pgs where this.IsPassable(pg) select pg.NearestPortal(ms)).Select(p => p[area, reverse: true]));
+        result.AddRange((from pg in pgs where this.IsPassable(pg) select this.NearestPassablePortal(ms, pg)).Select(p => p[area, reverse: true]));
 
         if (area == originalMap.GetArea(CurrentTarget) && !result.Contains(CurrentTarget))
         {
@@ -113,6 +113,36 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Return the nearest portal to a given 2D point in the current instance.
+    /// </summary>
+    /// <returns>
+    /// The portal.
+    /// </returns>
+    /// <param name="ms">
+    /// The ms.
+    /// </param>
+    /// <param name="minDist">
+    /// Minimum dist.
+    /// </param>
+    public Portal NearestPassablePortal(MapSquare ms, PortalGroup pg) {
+        Portal min = null;
+        var minDist = Mathf.Infinity;
+        foreach (var p in pg.Portals.Where(IsPassable))
+        {
+            var newDist = Portal.Distance(p, ms);
+            if (!(newDist < minDist))
+            {
+                continue;
+            }
+
+            minDist = newDist;
+            min = p;
+        }
+
+        return min;
     }
 
     /// <summary>
@@ -177,9 +207,12 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
         var changed = false;
-        foreach (var pg in pgs.Where(pg => this.UpdateBelief(pg, BDPMap.Instance.GetArea(ms), state)))
+        foreach (var pg in pgs)
         {
-            changed = true;
+            if (this.UpdateBelief(pg, BDPMap.Instance.GetArea(ms), state))
+            {
+                changed = true;
+            }
         }
 
         return changed;
@@ -203,10 +236,20 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     public bool UpdateBelief(PortalGroup pg, int area, bool state)
     {
         var changed = false;
+
         if (portalGroupState[this.PortalGroupKey(pg, area)] != state)
         {
-            portalGroupState[this.PortalGroupKey(pg, area)] = state;
-            changed = true;
+            var valid = true;
+            foreach (var p in pg.Portals.Where(p => BDPMap.Instance.IsFree(p[area]) != state))
+            {
+                valid = false;
+            }
+
+            if (valid)
+            {
+                portalGroupState[this.PortalGroupKey(pg, area)] = state;
+                changed = true;
+            }
         }
 
         portalTimestamp[pg] = Time.time;
@@ -256,6 +299,11 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         return portalGroupState[PortalGroupKey(pg, pg.LinkedAreas.First)]
                && portalGroupState[PortalGroupKey(pg, pg.LinkedAreas.Second)];
+    }
+
+    private bool IsPassable(Portal p)
+    {
+        return this.IsFree(p.LinkedSquares.First) && IsFree(p.LinkedSquares.Second);
     }
 
     /// <summary>

@@ -227,7 +227,7 @@ public class PathfindTester : MonoBehaviour
         CurrentMapIndex = 0;
         foreach (var txa in allMaps)
         {
-            CurrentMapIndex++;
+            
 
             /* Update the map and recompute the map. */
             BDPMap.Instance.MapFile = txa;
@@ -272,8 +272,8 @@ public class PathfindTester : MonoBehaviour
                 /* ********* */
                 UpdateAllPortalInArea(lastSquare);
 
-                int startTime = 0;
-                bool valid = true;
+                var startTime = 0;
+                var valid = true;
 
                 while (lastSquare != targetPos)
                 {
@@ -347,6 +347,7 @@ public class PathfindTester : MonoBehaviour
             }
 
             bd.PrintToFile();
+            CurrentMapIndex++;
         }
 
 #if PATHTESTER_DEBUG_LOG
