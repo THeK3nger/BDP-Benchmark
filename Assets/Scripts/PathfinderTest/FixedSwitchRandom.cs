@@ -42,14 +42,14 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     /// <summary>
     /// The start.
     /// </summary>
-    private void Start()
+    private void Awake()
     {
         // Only one component of type IPortalRandomStrategy can exist in one object!
         if (GetComponent<IPortalsRandomStrategy>() != this)
         {
             Destroy(this);
         }
-
+        Debug.LogWarning("EVVIVA! SONO START!");
         this.r = new Random(Seed);
     }
 

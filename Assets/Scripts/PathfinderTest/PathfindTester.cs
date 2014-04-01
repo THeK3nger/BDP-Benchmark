@@ -245,8 +245,8 @@ public class PathfindTester : MonoBehaviour
 
             var bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
-            RandomStrategy.Init();
             this.lastSquare = this.RandomFreePosition();
+            RandomStrategy.Init();
             while (CurrentMapIteration < NumberOfRuns)
             {
 #if PATHTESTER_DEBUG_LOG
@@ -338,7 +338,7 @@ public class PathfindTester : MonoBehaviour
 
                 }
 
-                if (valid)
+                if (true)
                 {
                     CurrentMapIteration++;
                     bd.RunsData.Add(srd);
