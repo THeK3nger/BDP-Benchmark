@@ -143,4 +143,15 @@ public class Map2D
         var elementsList = this.itemsCatalogue[type];
         return elementsList.IndexOf(element) != -1;
     }
+
+    public IEnumerable<MapSquare> MapSquares()
+    {
+        for (var x = 0; x < this.Width; x++)
+        {
+            for (var y = 0; y < this.Height; y++)
+            {
+                yield return new MapSquare(x, y);
+            }
+        }
+    } 
 }

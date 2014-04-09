@@ -14,6 +14,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography.X509Certificates;
 
 using RoomOfRequirement.Architectural;
 using RoomOfRequirement.Generic;
@@ -515,11 +516,17 @@ public class BDPMap : MonoSingleton<BDPMap>
             throw new ArgumentNullException("pg");
         }
 
-        foreach (var pms in pg.Portals.Select(p => p[area]).Where(pms => pms != null))
+        foreach (var p in pg.Portals)
         {
-            this.portalSquares[pms] = state;
+            this.portalSquares[p[area]] = state;
+            //this.portalSquares[p[area, true]] = state;
         }
     }
+
+    public IEnumerable<MapSquare> MapSquares()
+    {
+        return this.rawMap.MapSquares();
+    } 
 
     #region SertializationMethods
 
@@ -663,7 +670,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// <param name="otherSquare">
     /// the other square
     /// </param>
-    private void AddToPortalSquares(MapSquare currentSquare, MapSquare otherSquare)
+    private void AddToPortalSquares(MapSquare currentSquare, MapSquare otherSquare = null)
     {
         if (portalSquares == null)
         {
@@ -750,7 +757,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                 var currentSquare = new MapSquare(x, y);
                 var leftSquare = new MapSquare(x - 1, y);
                 var condOne = rawMap.IsFree(x, y) && leftArea != currentArea && leftArea != 0;
-                var condTwo = !portalStrike || (currentArea == GetArea(x, y - 1) && leftArea == GetArea(x - 1, y - 1));
+                var condTwo = !portalStrike || (currentArea == GetArea(x, y - 1) && leftArea == GetArea(x - 1, y - 1)) && pg.Portals.Count() < 5;
                 if (condOne && condTwo)
                 {
                     pg.Add(new Portal(currentSquare, leftSquare, currentArea, leftArea));
@@ -769,6 +776,15 @@ public class BDPMap : MonoSingleton<BDPMap>
                     portalStrike = false;
                     this.PortalConnectivity.AddVertex(pg);
                     pg = new PortalGroup();
+
+                    if (condOne)
+                    {
+                        pg.Add(new Portal(currentSquare, leftSquare, currentArea, leftArea));
+                        AddToReversePortalDictionary(currentSquare, leftSquare, pg);
+                        AddToAreaConnectivity(currentArea, leftArea);
+                        AddToPortalSquares(currentSquare, leftSquare);
+                        portalStrike = true;
+                    }
                 }
             }
         }
@@ -784,13 +800,11 @@ public class BDPMap : MonoSingleton<BDPMap>
         {
             foreach (var pg2 in this.PortalConnectivity.Vertices)
             {
-                if (!pg1.IsLinkedWith(pg2))
+                if (pg1.IsLinkedWith(pg2))
                 {
-                    continue;
+                    this.PortalConnectivity.AddEdge(pg1, pg2);
+                    this.PortalConnectivity.SetEdgeLabel(pg1, pg2, PortalGroup.Distance(pg1, pg2));
                 }
-
-                this.PortalConnectivity.AddEdge(pg1, pg2);
-                this.PortalConnectivity.SetEdgeLabel(pg1, pg2, PortalGroup.Distance(pg1, pg2));
             }
         }
     }
@@ -831,12 +845,40 @@ public class BDPMap : MonoSingleton<BDPMap>
                     portalStrike = false;
                     this.PortalConnectivity.AddVertex(pg);
                     pg = new PortalGroup();
+
+                    if (condOne) {
+                        pg.Add(new Portal(currentSquare, topSquare, currentArea, topArea));
+                        AddToReversePortalDictionary(currentSquare, topSquare, pg);
+                        AddToAreaConnectivity(currentArea, topArea);
+                        AddToPortalSquares(currentSquare, topSquare);
+                        portalStrike = true;
+                    }
                 }
             }
         }
     }
 
     #endregion
+
+
+    void Update() {
+        if (Input.GetKeyDown(KeyCode.G)) {
+            DrawConnectivityGraph();
+        }
+    }
+
+    private void DrawConnectivityGraph()
+    {
+        foreach (var portalGroup in PortalConnectivity.Vertices)
+        {
+            Vector3 p1 = MapRenderer.Instance.Grid2Cartesian(portalGroup.MidPortal.LinkedSquares.First);
+            foreach (var altro in PortalConnectivity.GetNeighbours(portalGroup))
+            {
+                Vector3 p2 = MapRenderer.Instance.Grid2Cartesian(altro.MidPortal.LinkedSquares.First);
+                Debug.DrawLine(p1, p2,Color.blue,2.0f);
+            }
+        }
+    }
 
     #region Nested type: Map2DSerialization
 
@@ -915,6 +957,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     }
 
     #endregion
+
 }
 
 // This is a SerializationBinder. It is needed by Unity to match the serialized assembly 
@@ -950,4 +993,6 @@ public sealed class VersionDeserializationBinder : SerializationBinder
 
         return null;
     }
+
+
 }

@@ -110,6 +110,14 @@ public class PortalGroup : ISerializable
         }
     }
 
+    public Portal MidPortal
+    {
+        get
+        {
+            return this.Portals.ToList()[Mathf.FloorToInt(this.Portals.Count() / 2.0f)];
+        }
+    }
+
     /// <summary>
     /// Add a portal to the portal group.
     /// </summary>
@@ -427,6 +435,46 @@ public class PortalGroup : ISerializable
         double minDist = 0;
         pg1.NearestPortal(ms, out minDist);
         return minDist;
+    }
+
+    public static bool AreContiguous(PortalGroup pg1, PortalGroup pg2)
+    {
+        if (pg1.Horizontal != pg2.Horizontal)
+        {
+            return false;
+        }
+
+        if (pg1.Horizontal)
+        {
+            if (Math.Abs(pg1.MidPoint.y - pg2.MidPoint.y) > 0.1)
+            {
+                return false;
+            }
+
+            if (Math.Abs(pg1.Last.x - (pg2.First.x + 1)) < 0.1 || Math.Abs(pg1.First.x - (pg2.Last.x - 1)) < 0.1)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            if (Math.Abs(pg1.MidPoint.x - pg2.MidPoint.x) > 0.1)
+            {
+                return false;
+            }
+
+            if (Math.Abs(pg1.Last.y - (pg2.First.y + 1)) < 0.1 || Math.Abs(pg1.First.y - (pg2.Last.y - 1)) < 0.1) 
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool LinkSameArea(PortalGroup pg1, PortalGroup pg2)
+    {
+        return Tuple<int,int>.CommutativeEquals(pg1.LinkedAreas, pg2.LinkedAreas);
     }
 
     #region StandardOverrides

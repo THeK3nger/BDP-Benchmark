@@ -77,14 +77,13 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
     public override void RandomizeWorldPortals()
     {
         // Select a random set of portals.
-        var scrambleNumber = (int)Mathf.Floor(BDPMap.Instance.PortalConnectivity.Vertices.Count() * ScrambleAmount);
-        //Debug.LogWarning(scrambleNumber);
-        //Debug.LogWarning(ScrambleAmount);
+        var scrambleNumber = (int)Mathf.Floor(BDPMap.Instance.PortalConnectivity.Vertices.Count() * ScrambleAmount * 0.5f);
+
         var ppclosed =
-            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Where(p => !BDPMap.Instance.GetPortalGroupState(p,p.LinkedAreas.First))
+            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Where(p => !BDPMap.Instance.GetPortalGroupState(p, p.LinkedAreas.First))
                 .Take(scrambleNumber);
         var ppopen =
-            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Where(p => !BDPMap.Instance.GetPortalGroupState(p,p.LinkedAreas.First))
+            BDPMap.Instance.PortalConnectivity.Vertices.OrderBy(x => r.Next()).Where(p => BDPMap.Instance.GetPortalGroupState(p, p.LinkedAreas.First))
                 .Take(scrambleNumber);
 
         // Switch that set.

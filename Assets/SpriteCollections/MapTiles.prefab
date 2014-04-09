@@ -115,10 +115,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 0
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
-    boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    boxColliderMax: {x: 32, y: 32}
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -155,10 +161,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 1
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -195,10 +207,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 2
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -235,10 +253,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 3
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -275,10 +299,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 4
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -315,10 +345,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 5
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -355,10 +391,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 6
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -395,10 +437,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 7
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -435,10 +483,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 8
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -475,10 +529,16 @@ MonoBehaviour:
     regionW: 32
     regionH: 32
     regionId: 9
-    colliderType: 0
+    colliderType: 1
     boxColliderMin: {x: 0, y: 0}
     boxColliderMax: {x: 0, y: 0}
-    polyColliderIslands: []
+    polyColliderIslands:
+    - connected: 1
+      points:
+      - {x: 0, y: 0}
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 32, y: 0}
     polyColliderCap: 1
     colliderConvex: 0
     colliderSmoothSphereCollisions: 0
@@ -514,6 +574,7 @@ MonoBehaviour:
   physicsEngine: 0
   physicsDepth: .100000001
   disableTrimming: 0
+  disableRotation: 0
   normalGenerationMode: 0
   padAmount: -1
   autoUpdate: 1

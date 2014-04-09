@@ -241,7 +241,9 @@ public class Portal : ISerializable
         }
 
         var other = (Portal)obj;
-        return this.LinkedSquares == other.LinkedSquares;
+        return Tuple<MapSquare, MapSquare>.CommutativeEquals(this.LinkedSquares, other.LinkedSquares);
+
+        //return this.LinkedSquares == other.LinkedSquares;
     }
 
     /// <summary>

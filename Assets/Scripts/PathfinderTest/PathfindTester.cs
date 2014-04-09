@@ -19,8 +19,6 @@ using System.Linq;
 using RoomOfRequirement.Logger;
 using RoomOfRequirement.Search;
 
-using UnityEditor;
-
 using UnityEngine;
 
 using Object = UnityEngine.Object;
@@ -75,6 +73,11 @@ public class PathfindTester : MonoBehaviour
     /// Store the list of maps.
     /// </summary>
     private readonly List<TextAsset> allMaps = new List<TextAsset>();
+
+    /// <summary>
+    /// Reference to the agent.
+    /// </summary>
+    private AgentEntity agent;
 
     /// <summary>
     /// Gets a reference to a portal randomizer algorithm.
@@ -159,6 +162,7 @@ public class PathfindTester : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        agent = new AgentEntity(this.ThePathfinder.AgentBelief as HVertexBased);
         RandomStrategy = GetComponent<IPortalsRandomStrategy>();
         var parameters = ParseParameters.ParseFile(Resources.Load<TextAsset>("parameters"));
         foreach (var par in parameters.Keys)
@@ -227,25 +231,24 @@ public class PathfindTester : MonoBehaviour
         CurrentMapIndex = 0;
         foreach (var txa in allMaps)
         {
-            
-
             /* Update the map and recompute the map. */
             BDPMap.Instance.MapFile = txa;
             BDPMap.Instance.ComputeMap();
+
+            var bd = new BenchmarkData(this);
+
             while (!BDPMap.Instance.MapIsLoaded)
             {
                 yield return new WaitForSeconds(0.5f);
             }
 
-            ThePathfinder.AgentBelief.ResetBelieves();
+            agent.CleanBelief();
 
 #if PATHTESTER_DEBUG_LOG
             Debug.Log(string.Format("[MAINLOOP] Starting Iteration on map {0}", txa.name));
 #endif
-
-            var bd = new BenchmarkData(this);
             CurrentMapIteration = 0;
-            this.lastSquare = this.RandomFreePosition();
+            agent.CurrentPosition = this.RandomFreePosition();
             RandomStrategy.Init();
             while (CurrentMapIteration < NumberOfRuns)
             {
@@ -263,32 +266,31 @@ public class PathfindTester : MonoBehaviour
                     RandomStrategy.RandomizeWorldPortals();
                 }
 
-                //this.lastSquare = this.RandomFreePosition();
                 var targetPos = this.DraftRandomTargetPos();
 
                 /* BENCHMARK */
-                InitializeSRD(lastSquare, targetPos);
+                InitializeSRD(agent.CurrentPosition, targetPos);
 
                 /* ********* */
-                UpdateAllPortalInArea(lastSquare);
+                UpdateAllPortalInArea(agent.CurrentPosition);
 
                 var startTime = 0;
                 var valid = true;
 
-                while (lastSquare != targetPos)
+                while (agent.CurrentPosition != targetPos)
                 {
                     startTime++;
                     this.executionError = false;
                     if (startTime > 30) 
                     {
                         srd.PathFound = false;
-                        Debug.Log("[MAINLOOP] No path found! Go to next pick.");
+                        Debug.Log("[MAINLOOP] Time out! Go to next pick.");
                         valid = false;
                         break;
                     }
 
 #if PATHTESTER_DEBUG_LOG
-                    Debug.Log(string.Format("[MAINLOOP] Execution Step from {0} to {1}", lastSquare, targetPos));
+                    Debug.Log(string.Format("[MAINLOOP] Execution Step from {0} to {1}", agent.CurrentPosition, targetPos));
 #endif
 
                     if (ThePathfinder.AgentBelief.Hierarchical)
@@ -296,7 +298,7 @@ public class PathfindTester : MonoBehaviour
                         ThePathfinder.AgentBelief.CurrentTarget = targetPos;
                     }
 
-                    var path = ThePathfinder.PathFind(lastSquare, targetPos);
+                    var path = ThePathfinder.PathFind(agent.CurrentPosition, targetPos);
 
                     /* BENCHMARK */
                     UpdateSRD();
@@ -308,7 +310,7 @@ public class PathfindTester : MonoBehaviour
                         if (ThePathfinder.AgentBelief.Hierarchical)
                         {
                             Debug.Log("[MAINLOOP] Starting Belief Revision Loop");
-                            path = BeliefRevisionLoop(lastSquare, targetPos);
+                            path = BeliefRevisionLoop(agent.CurrentPosition, targetPos);
                         }
 
                         if (path == null)
@@ -335,7 +337,6 @@ public class PathfindTester : MonoBehaviour
                     {
                         yield return StartCoroutine(ExecutePath(pathList));
                     }
-
                 }
 
                 if (true)
@@ -343,6 +344,7 @@ public class PathfindTester : MonoBehaviour
                     CurrentMapIteration++;
                     bd.RunsData.Add(srd);
                 }
+
                 yield return new WaitForSeconds(0.1f);
             }
 
@@ -362,6 +364,7 @@ public class PathfindTester : MonoBehaviour
     /// <returns>A list representation of the path.</returns>
     private static List<MapSquare> Path2MapSquareList(Path<MapSquare> path)
     {
+        //TODO: Move to Path.
         var pathList = new List<MapSquare>(path);
         pathList.Reverse();
         return pathList;
@@ -375,16 +378,17 @@ public class PathfindTester : MonoBehaviour
     {
         var targetPos = this.RandomFreePosition();
         //Debug.Log(string.Format("From {0} to {1}", this.lastSquare, targetPos));
-        this.AgentIndicator.GridPosition = new MapSquare(this.lastSquare.x, this.lastSquare.y);
+        this.AgentIndicator.GridPosition = new MapSquare(this.agent.CurrentPosition.x, this.agent.CurrentPosition.y);
         this.TargetIndicator.GridPosition = new MapSquare(targetPos.x, targetPos.y);
 
         // Avoid Same Area Paths.
-        while (this.IsSameAreaPath(this.lastSquare, targetPos))
+        while (this.IsSameAreaPath(this.agent.CurrentPosition, targetPos))
         {
             // Ignore Path. Repick.
             targetPos = this.RandomFreePosition();
             this.TargetIndicator.GridPosition = new MapSquare(targetPos.x, targetPos.y);
         }
+
         return targetPos;
     }
 
@@ -432,12 +436,17 @@ public class PathfindTester : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (!BDPMap.Instance.MapIsLoaded) {
+        if (!BDPMap.Instance.MapIsLoaded) 
+        {
             return;
         }
-        for (var x = 0; x < BDPMap.Instance.Width; ++x) {
-            for (var y = 0; y < BDPMap.Instance.Height; ++y) {
-                if (!BDPMap.Instance.IsPortalSquare(new MapSquare(x, y))) {
+
+        for (var x = 0; x < BDPMap.Instance.Width; ++x)
+        {
+            for (var y = 0; y < BDPMap.Instance.Height; ++y) 
+            {
+                if (!BDPMap.Instance.IsPortalSquare(new MapSquare(x, y))) 
+                {
                     continue;
                 }
 
@@ -468,24 +477,14 @@ public class PathfindTester : MonoBehaviour
         Debug.Log(string.Format("[REVISION] Portal belief revision for {0} to {1}", currentPos, targetPos));
 #endif
         Path<MapSquare> path = null;
-        var belief = ThePathfinder.AgentBelief as IMapHierarchicalBelief;
-        if (belief == null)
-        {
-            Debug.LogError("[REVISION] BELIEF IS NULL!");
-            throw new Exception("BELIEF IS NULL!");
-        }
-
         var t = 10.0f;
-        const float Tmin = 0.1f;
+        const float Tmin = 1.0f;
         while (path == null && t > Tmin)
         {
             Debug.Log(string.Format("[REVISION] Open portals older than {0}", t));
-            belief.OpenOldPortals(t);
+            agent.ReviewBeliefOlderThan(t);
             path = ThePathfinder.PathFind(currentPos, targetPos);
-            if (path == null)
-            {
-                t--;
-            }
+            t--;
         }
 
         return path;
@@ -515,24 +514,25 @@ public class PathfindTester : MonoBehaviour
         while (true)
         {
             var nextPos = pathList[stepIndex];
-            if (!BDPMap.Instance.IsFree(nextPos))
+            var currentArea = BDPMap.Instance.GetArea(agent.CurrentPosition);
+            var nextPosArea = BDPMap.Instance.GetArea(nextPos);
+            if (!agent.MoveTo(nextPos))
             {
                 bool changed;
                 srd.UpdateTicks += MethodProfiler.ProfileMethod(
-                    ThePathfinder.AgentBelief.UpdateBelief, 
-                    nextPos, 
-                    false, 
+                    agent.UpdateBelief,
+                    nextPos,
+                    false,
                     out changed);
                 this.executionError = true;
-                lastSquare = currentPos;
+                agent.CurrentPosition = currentPos;
                 break;
             }
 
-            AgentIndicator.GridPosition = new MapSquare(nextPos.x, nextPos.y);
-            var nextPosArea = BDPMap.Instance.GetArea(nextPos);
+            AgentIndicator.GridPosition = agent.CurrentPosition;
 
             // If enter a new area, update all the portals in the area.
-            if (BDPMap.Instance.GetArea(currentPos) != nextPosArea)
+            if (currentArea != nextPosArea)
             {
                 var changed = UpdateAllPortalInArea(nextPos);
                 if (changed)
@@ -541,24 +541,20 @@ public class PathfindTester : MonoBehaviour
                     Debug.Log("[LOW-LEVEL-PATH] Discrepancy Found!");
 #endif
                     this.executionError = true;
-                    lastSquare = currentPos;
                     break;
                 }
             }
 
-            currentPos = nextPos;
             srd.PathLenght++;
-            if (currentPos == targetPos)
+            if (agent.CurrentPosition == targetPos)
             {
                 // pathCompleted = true;
                 this.executionError = false;
-                lastSquare = currentPos;
                 break;
             }
 
             stepIndex++;
 
-            // yield return new WaitForEndOfFrame();
             if (ShowPathAnimation)
             {
                 yield return new WaitForSeconds(PathStepInterval);
@@ -568,7 +564,7 @@ public class PathfindTester : MonoBehaviour
 
     private static void LogPath(string tag, IList<MapSquare> pathList)
     {
-        string pathstring = pathList.Aggregate(
+        var pathstring = pathList.Aggregate(
             tag,
             (current, mapSquare) => current + (mapSquare.ToString() + " -> "));
         Debug.Log(pathstring);
@@ -626,15 +622,13 @@ public class PathfindTester : MonoBehaviour
             if (path == null)
             {
                 Debug.Log("[HIGH-LEVEL-PATH] No low level path.");
-                UpdateAllPortalInArea(currentHighLevelPos);
+                //UpdateAllPortalInArea(currentHighLevelPos);
+                agent.UpdateBelief(nextHighLevelPos, false);
                 this.executionError = true;
                 break;
             }
 
             var subPathList = Path2MapSquareList(path);
-
-            //var subPathList = new List<MapSquare>(path) { currentHighLevelPos };
-            //subPathList.Reverse();
 
             // --
             this.executionError = false;
@@ -642,8 +636,8 @@ public class PathfindTester : MonoBehaviour
             if (this.executionError)
             {
                 Debug.Log("[HIGH-LEVEL-PATH] Error on ExecutePath.");
-
-                // mapInconsistency = true;
+                Debug.Log(string.Format("Update {0}",nextHighLevelPos));
+                agent.UpdateBelief(nextHighLevelPos, false);
                 break;
             }
 
@@ -653,8 +647,6 @@ public class PathfindTester : MonoBehaviour
             {
                 break;
             }
-
-            nextHighLevelPos = pathList[stepIndex];
         }
     }
 
@@ -668,23 +660,14 @@ public class PathfindTester : MonoBehaviour
     {
         MapSquare chosenPos = null;
         var count = 1;
-        for (var x = 0; x < BDPMap.Instance.Width; x++)
+        foreach (var ms in BDPMap.Instance.MapSquares().Where(ms => BDPMap.Instance.IsFree(ms) && !BDPMap.Instance.IsPortalSquare(ms)))
         {
-            for (var y = 0; y < BDPMap.Instance.Height; y++)
+            if (this.r.Next(0, count) == 0)
             {
-                var tryPos = new MapSquare(x, y);
-                if (!BDPMap.Instance.IsFree(tryPos) || BDPMap.Instance.IsPortalSquare(tryPos))
-                {
-                    continue;
-                }
-
-                if (this.r.Next(0, count) == 0)
-                {
-                    chosenPos = tryPos;
-                }
-
-                count++;
+                chosenPos = ms;
             }
+
+            count++;
         }
 
         return chosenPos;
@@ -706,7 +689,7 @@ public class PathfindTester : MonoBehaviour
 
             bool tmpChange;
             this.srd.UpdateTicks += MethodProfiler.ProfileMethod(
-                this.ThePathfinder.AgentBelief.UpdateBelief,
+                agent.UpdateBelief,
                 updateSquareIn,
                 BDPMap.Instance.IsFree(updateSquareIn),
                 out tmpChange);
@@ -721,7 +704,7 @@ public class PathfindTester : MonoBehaviour
             }
 
             this.srd.UpdateTicks += MethodProfiler.ProfileMethod(
-                this.ThePathfinder.AgentBelief.UpdateBelief,
+                agent.UpdateBelief,
                 updateSquareOut,
                 BDPMap.Instance.IsFree(updateSquareOut),
                 out tmpChange);

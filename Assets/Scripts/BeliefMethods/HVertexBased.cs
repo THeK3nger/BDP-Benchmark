@@ -69,7 +69,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
 
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
         var area = BDPMap.Instance.GetArea(ms);
-        return pgs.All(pg => this.portalGroupState[this.PortalGroupKey(pg, area)]);
+        return pgs.All(pg => this.portalGroupState[PortalGroupKey(pg, area)]);
     }
 
     /// <summary>
@@ -105,7 +105,14 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
         var area = originalMap.GetArea(ms);
 
         var pgs = originalMap.GetPortalGroupByAreas(area);
-        result.AddRange((from pg in pgs where this.IsPassable(pg) select this.NearestPassablePortal(ms, pg)).Select(p => p[area, reverse: true]));
+        if (pgs == null)
+        {
+            Debug.LogError("BOOM");
+        }
+
+        var candidates = (from pg in pgs where this.IsPassable(pg) select MidPortal(pg)).Select(p => p[area, reverse: true]);
+
+        result.AddRange(candidates);
 
         if (area == originalMap.GetArea(CurrentTarget) && !result.Contains(CurrentTarget))
         {
@@ -143,6 +150,22 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
         }
 
         return min;
+    }
+
+    /// <summary>
+    /// Return the nearest portal to a given 2D point in the current instance.
+    /// </summary>
+    /// <returns>
+    /// The portal.
+    /// </returns>
+    /// <param name="ms">
+    /// The ms.
+    /// </param>
+    /// <param name="minDist">
+    /// Minimum dist.
+    /// </param>
+    public Portal MidPortal(PortalGroup pg) {
+        return pg.Portals.ToList()[Mathf.FloorToInt(pg.Portals.Count() / 2.0f)];
     }
 
     /// <summary>
@@ -206,13 +229,15 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     public bool UpdateBelief(MapSquare ms, bool state)
     {
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
-        var changed = false;
-        foreach (var pg in pgs)
+        if (pgs.Count == 0)
         {
-            if (this.UpdateBelief(pg, BDPMap.Instance.GetArea(ms), state))
-            {
-                changed = true;
-            }
+            Debug.LogWarning("Updating a non portalsquare!");
+            return false;
+        }
+        var changed = false;
+        foreach (var pg in pgs.Where(pg => this.UpdateBelief(pg, BDPMap.Instance.GetArea(ms), state)))
+        {
+            changed = true;
         }
 
         return changed;
@@ -237,17 +262,17 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     {
         var changed = false;
 
-        if (portalGroupState[this.PortalGroupKey(pg, area)] != state)
+        if (portalGroupState[PortalGroupKey(pg, area)] != state)
         {
             var valid = true;
-            foreach (var p in pg.Portals.Where(p => BDPMap.Instance.IsFree(p[area]) != state))
-            {
-                valid = false;
-            }
+            //foreach (var p in pg.Portals.Where(p => BDPMap.Instance.IsFree(p[area]) != state))
+            //{
+            //    valid = false;
+            //}
 
             if (valid)
             {
-                portalGroupState[this.PortalGroupKey(pg, area)] = state;
+                portalGroupState[PortalGroupKey(pg, area)] = state;
                 changed = true;
             }
         }
@@ -285,7 +310,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// <param name="pg">The portal group.</param>
     /// <param name="area">The area.</param>
     /// <returns>A key for the dictionary portalGroupState</returns>
-    private Tuple<PortalGroup, int> PortalGroupKey(PortalGroup pg, int area)
+    private static Tuple<PortalGroup, int> PortalGroupKey(PortalGroup pg, int area)
     {
         return new Tuple<PortalGroup, int>(pg, area);
     }
@@ -312,7 +337,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// <param name="pg">The given portal group.</param>
     /// <param name="state">The desired state.</param>
     private void FullPortalGroupStateUpdate(PortalGroup pg, bool state) {
-        this.portalGroupState[this.PortalGroupKey(pg, pg.LinkedAreas.First)] = state;
-        this.portalGroupState[this.PortalGroupKey(pg, pg.LinkedAreas.Second)] = state;
+        this.portalGroupState[PortalGroupKey(pg, pg.LinkedAreas.First)] = state;
+        this.portalGroupState[PortalGroupKey(pg, pg.LinkedAreas.Second)] = state;
     }
 }

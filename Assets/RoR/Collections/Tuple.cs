@@ -112,6 +112,23 @@ public class Tuple<T1, T2> : ISerializable
         return string.Format("<{0}, {1}>", First, Second);
     }
 
+    /// <summary>
+    /// Compare a tuple ignoring the element order.
+    /// </summary>
+    /// <param name="tupleA"></param>
+    /// <param name="tupleB"></param>
+    /// <returns></returns>
+    public static bool CommutativeEquals(Tuple<T1, T2> tupleA, Tuple<T1, T2> tupleB)
+    {
+        if (typeof(T1) != typeof(T2))
+        {
+            throw new ArgumentException("Method callable only if tuple use the same type for T1 and T2!");
+        }
+
+        return (Equals(tupleA.First, tupleB.First) && Equals(tupleA.Second, tupleB.Second)) 
+               || (Equals(tupleA.First, tupleB.Second) && Equals(tupleA.Second, tupleB.First));
+    }
+
     #region SertializationMethods
 
     /// <summary>
