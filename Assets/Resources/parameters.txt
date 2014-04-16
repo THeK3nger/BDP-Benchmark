@@ -1,6 +1,0 @@
-update_radius=2
-seed=160
-number_of_runs=500
-scramble_rate=1
-initial_randomness=0.20
-scramble_amount=0.05

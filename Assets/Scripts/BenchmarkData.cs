@@ -63,32 +63,35 @@ public class BenchmarkData
     /// </summary>
     public List<SingleRunData> RunsData { get; private set; }
 
+    public float TMin { get; set; }
+
     /// <summary>
     /// Print all the collected data in to a file in CSV format.
     /// </summary>
     public void PrintToFile()
     {
         var filename = string.Format(
-            "{4}-{0}-{1}-{2}-{3}.csv", 
+            "{4}-{0}-{1}-{2}-{3}-{5}.csv", 
             AgentType, 
             BeliefMemoryUsed, 
             ScrambleRate, 
             IncosistencyRate, 
-            MapFile);
+            MapFile,TMin);
         using (var file = new System.IO.StreamWriter(filename))
         {
-            file.WriteLine("#A,Explored,MaxMem,Lenght,PathTicks,UpdateTicks,PathFound");
+            file.WriteLine("#A,Explored,MaxMem,Lenght,PathTicks,UpdateTicks,PathFound,RealPath");
             foreach (var srd in RunsData)
             {
                 file.WriteLine(
-                    "{0},{1},{2},{3},{4},{5},{6}", 
+                    "{0},{1},{2},{3},{4},{5},{6},{7}", 
                     srd.NumberOfAttempts, 
                     srd.ExploredNodes, 
                     srd.MaxMemoryUsage, 
                     srd.PathLenght.ToString("0.00"), 
                     srd.PathfindingTicks, 
                     srd.UpdateTicks, 
-                    srd.PathFound);
+                    srd.PathFound,
+                    srd.RealPathExists);
             }
         }
     }
@@ -147,4 +150,6 @@ public class SingleRunData
     /// this step.
     /// </summary>
     public bool PathFound { get; set; }
+
+    public bool RealPathExists { get; set; }
 }

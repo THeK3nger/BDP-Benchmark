@@ -37,6 +37,8 @@ public class PathfindTester : MonoBehaviour
 
     public int UpdateDepth = 1;
 
+    public float TMin = 0.1f;
+
     /// <summary>
     /// Seed for the RNG.
     /// </summary>
@@ -164,7 +166,25 @@ public class PathfindTester : MonoBehaviour
     {
         agent = new AgentEntity(this.ThePathfinder.AgentBelief as HVertexBased);
         RandomStrategy = GetComponent<IPortalsRandomStrategy>();
-        var parameters = ParseParameters.ParseFile(Resources.Load<TextAsset>("parameters"));
+        StartCoroutine(this.MetaLoop());
+    }
+
+    public IEnumerator MetaLoop()
+    {
+        var parameters = Resources.LoadAll("Parameters");
+        foreach (var paramFile in parameters) {
+            LoadParameters((TextAsset)paramFile);
+            // Set the seed to allow multiple test.
+            r = new System.Random(Seed);
+            AStar.CollectProfiling = true;
+            LoadAllMaps();
+            yield return StartCoroutine(MainNHTestLoop());
+        }
+    }
+
+    private void LoadParameters(TextAsset paramFile)
+    {
+        var parameters = ParseParameters.ParseFile(paramFile);
         foreach (var par in parameters.Keys)
         {
             switch (par)
@@ -187,13 +207,11 @@ public class PathfindTester : MonoBehaviour
                 case "scramble_amount":
                     RandomStrategy.SetScrambleAmount(parameters[par]);
                     break;
+                case "valid_revision_limit":
+                    TMin = parameters[par];
+                    break;
             }
         }
-        // Set the seed to allow multiple test.
-        r = new System.Random(Seed);
-        AStar.CollectProfiling = true;
-        LoadAllMaps();
-        StartCoroutine(MainNHTestLoop());
     }
 
     /// <summary>
@@ -235,7 +253,7 @@ public class PathfindTester : MonoBehaviour
             BDPMap.Instance.MapFile = txa;
             BDPMap.Instance.ComputeMap();
 
-            var bd = new BenchmarkData(this);
+            var bd = new BenchmarkData(this) { TMin = this.TMin };
 
             while (!BDPMap.Instance.MapIsLoaded)
             {
@@ -403,7 +421,8 @@ public class PathfindTester : MonoBehaviour
     /// </param>
     private void InitializeSRD(MapSquare currentPos, MapSquare targetPos)
     {
-        srd = new SingleRunData { StartingPoint = currentPos.ToString(), TargetPoint = targetPos.ToString() };
+        var p = ThePathfinder.TheMightyOmniscientAndPerfectPathfinder(currentPos, targetPos);
+        srd = new SingleRunData { StartingPoint = currentPos.ToString(), TargetPoint = targetPos.ToString(), RealPathExists = p!=null};
     }
 
     /// <summary>
@@ -478,8 +497,8 @@ public class PathfindTester : MonoBehaviour
 #endif
         Path<MapSquare> path = null;
         var t = 10.0f;
-        const float Tmin = 1.0f;
-        while (path == null && t > Tmin)
+        //const float Tmin = 11.0f;
+        while (path == null && t > TMin)
         {
             Debug.Log(string.Format("[REVISION] Open portals older than {0}", t));
             agent.ReviewBeliefOlderThan(t);
@@ -693,10 +712,7 @@ public class PathfindTester : MonoBehaviour
                 updateSquareIn,
                 BDPMap.Instance.IsFree(updateSquareIn),
                 out tmpChange);
-            if (tmpChange)
-            {
-                changed = true;
-            }
+            changed = tmpChange;
 
             if (!BDPMap.Instance.IsFree(updateSquareIn)) 
             {

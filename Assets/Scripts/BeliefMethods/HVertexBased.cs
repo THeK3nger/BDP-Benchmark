@@ -229,6 +229,9 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     public bool UpdateBelief(MapSquare ms, bool state)
     {
         var pgs = BDPMap.Instance.GetPortalGroupBySquare(ms);
+        //TODO: This is an hack.
+        if (pgs == null) return false;
+        // end
         if (pgs.Count == 0)
         {
             Debug.LogWarning("Updating a non portalsquare!");

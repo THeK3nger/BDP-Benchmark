@@ -163,4 +163,29 @@ public class Pathfinder : MonoBehaviour
             (ms) => MapSquare.Distance(ms, target));
         return path;
     }
+
+    /// <summary>
+    /// The path find on real map.
+    /// </summary>
+    /// <param name="start">
+    /// The start.
+    /// </param>
+    /// <param name="target">
+    /// The target.
+    /// </param>
+    /// <param name="area">
+    /// The area.
+    /// </param>
+    /// <returns>
+    /// The <see cref="Path"/>.
+    /// </returns>
+    public Path<MapSquare> TheMightyOmniscientAndPerfectPathfinder(MapSquare start, MapSquare target) {
+        var path = AStar.FindPath(
+            start,
+            target,
+            (ms) => this.Omniscient.Neighbours(ms).ToList(),
+            MapSquare.Distance,
+            (ms) => MapSquare.Distance(ms, target));
+        return path;
+    }
 }
