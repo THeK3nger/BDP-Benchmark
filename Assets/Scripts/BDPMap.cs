@@ -826,7 +826,7 @@ public class BDPMap : MonoSingleton<BDPMap>
                 var currentSquare = new MapSquare(x, y);
                 var topSquare = new MapSquare(x, y - 1);
                 var condOne = rawMap.IsFree(x, y) && topArea != currentArea && topArea != 0;
-                var condTwo = !portalStrike || (currentArea == GetArea(x - 1, y) && topArea == GetArea(x - 1, y - 1));
+                var condTwo = !portalStrike || (currentArea == GetArea(x - 1, y) && topArea == GetArea(x - 1, y - 1)) && pg.Portals.Count() < 5;
                 if (condOne && condTwo)
                 {
                     pg.Add(new Portal(currentSquare, topSquare, currentArea, topArea));

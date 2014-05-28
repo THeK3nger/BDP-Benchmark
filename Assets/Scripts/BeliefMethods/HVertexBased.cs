@@ -44,7 +44,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// <summary>
     /// The portal timestamp.
     /// </summary>
-    private readonly Dictionary<PortalGroup, float> portalTimestamp = new Dictionary<PortalGroup, float>();
+    private readonly Dictionary<PortalGroup, long> portalTimestamp = new Dictionary<PortalGroup, long>();
 
     /// <summary>
     /// The is free.
@@ -192,13 +192,13 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
             if (portalTimestamp.ContainsKey(pg))
             {
                 this.FullPortalGroupStateUpdate(pg, true);
-                portalTimestamp[pg] = Time.time;
+                portalTimestamp[pg] = StepCounter.Steps;
             }
             else
             {
                 portalGroupState.Add(PortalGroupKey(pg, pg.LinkedAreas.First), true);
                 portalGroupState.Add(PortalGroupKey(pg, pg.LinkedAreas.Second), true);
-                portalTimestamp.Add(pg, Time.time);
+                portalTimestamp.Add(pg, StepCounter.Steps);
             }
         }
     }
@@ -280,7 +280,7 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
             }
         }
 
-        portalTimestamp[pg] = Time.time;
+        portalTimestamp[pg] = StepCounter.Steps;
         return changed;
     }
 
@@ -298,10 +298,10 @@ public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
     /// <param name="timeLimit">
     /// The time limit.
     /// </param>
-    public void OpenOldPortals(float timeLimit)
+    public void OpenOldPortals(long stepWindow)
     {
-        var timeHorizion = Time.time - timeLimit;
-        foreach (var key in this.portalTimestamp.Keys.ToList().Where(key => this.portalTimestamp[key] < timeHorizion))
+        var stepHorizon = StepCounter.Steps - stepWindow;
+        foreach (var key in this.portalTimestamp.Keys.ToList().Where(key => this.portalTimestamp[key] < stepHorizon))
         {
             this.FullPortalGroupStateUpdate(key, true);
         }

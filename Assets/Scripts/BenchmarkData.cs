@@ -30,6 +30,7 @@ public class BenchmarkData
         this.ScrambleRate = test.ScrambleRate;
         this.IncosistencyRate = test.RandomStrategy.GetRandomAmount();
         this.MapFile = test.CurrentMapName;
+		this.ParamTag = test.CurrentParam;
     }
 
     /// <summary>
@@ -65,25 +66,27 @@ public class BenchmarkData
 
     public float TMin { get; set; }
 
+	public string ParamTag {get; set; }
+
     /// <summary>
     /// Print all the collected data in to a file in CSV format.
     /// </summary>
     public void PrintToFile()
     {
         var filename = string.Format(
-            "{4}-{0}-{1}-{2}-{3}-{5}.csv", 
+			"{4}-{0}-{1}-{2}-{3}-{5}-{6}.csv", 
             AgentType, 
             BeliefMemoryUsed, 
             ScrambleRate, 
             IncosistencyRate, 
-            MapFile,TMin);
+			MapFile,TMin,ParamTag);
         using (var file = new System.IO.StreamWriter(filename))
         {
-            file.WriteLine("#A,Explored,MaxMem,Lenght,PathTicks,UpdateTicks,PathFound,RealPath");
+            file.WriteLine("#A,Explored,MaxMem,Lenght,PathTicks,UpdateTicks,PathFound,RealPath,RealEffort");
             foreach (var srd in RunsData)
             {
                 file.WriteLine(
-                    "{0},{1},{2},{3},{4},{5},{6},{7}", 
+					"{0},{1},{2},{3},{4},{5},{6},{7},{8}", 
                     srd.NumberOfAttempts, 
                     srd.ExploredNodes, 
                     srd.MaxMemoryUsage, 
@@ -91,7 +94,8 @@ public class BenchmarkData
                     srd.PathfindingTicks, 
                     srd.UpdateTicks, 
                     srd.PathFound,
-                    srd.RealPathExists);
+                    srd.RealPathExists,
+					srd.OmniscientEffort);
             }
         }
     }
@@ -152,4 +156,6 @@ public class SingleRunData
     public bool PathFound { get; set; }
 
     public bool RealPathExists { get; set; }
+
+	public int OmniscientEffort { get; set; }
 }

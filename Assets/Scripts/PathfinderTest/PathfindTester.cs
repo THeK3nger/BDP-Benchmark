@@ -37,7 +37,9 @@ public class PathfindTester : MonoBehaviour
 
     public int UpdateDepth = 1;
 
-    public float TMin = 0.1f;
+    public long Windows = 2;
+	public long MinWindows = 0;
+	public bool Caching = true;
 
     /// <summary>
     /// Seed for the RNG.
@@ -122,6 +124,8 @@ public class PathfindTester : MonoBehaviour
     /// </summary>
     public AgentPositioning TargetIndicator;
 
+	public string CurrentParam;
+
 #if PATHTESTER_DEBUG_LOG
 
     /// <summary>
@@ -185,6 +189,7 @@ public class PathfindTester : MonoBehaviour
     private void LoadParameters(TextAsset paramFile)
     {
         var parameters = ParseParameters.ParseFile(paramFile);
+		CurrentParam = paramFile.name;
         foreach (var par in parameters.Keys)
         {
             switch (par)
@@ -208,8 +213,14 @@ public class PathfindTester : MonoBehaviour
                     RandomStrategy.SetScrambleAmount(parameters[par]);
                     break;
                 case "valid_revision_limit":
-                    TMin = parameters[par];
+                    Windows = (long)parameters[par];
                     break;
+				case "minimal_windows":
+					MinWindows = (long)parameters[par];
+					break;
+				case "cache" :
+					Caching = (parameters[par] > 0.0f);
+					break;
             }
         }
     }
@@ -253,7 +264,7 @@ public class PathfindTester : MonoBehaviour
             BDPMap.Instance.MapFile = txa;
             BDPMap.Instance.ComputeMap();
 
-            var bd = new BenchmarkData(this) { TMin = this.TMin };
+            var bd = new BenchmarkData(this) { TMin = this.Windows };
 
             while (!BDPMap.Instance.MapIsLoaded)
             {
@@ -281,6 +292,7 @@ public class PathfindTester : MonoBehaviour
 #if PATHTESTER_DEBUG_LOG
                     Debug.Log("[MAINLOOP] Randomizing Portals");
 #endif
+                    StepCounter.Increase();
                     RandomStrategy.RandomizeWorldPortals();
                 }
 
@@ -316,7 +328,11 @@ public class PathfindTester : MonoBehaviour
                         ThePathfinder.AgentBelief.CurrentTarget = targetPos;
                     }
 
-                    var path = ThePathfinder.PathFind(agent.CurrentPosition, targetPos);
+					if (!Caching) {
+						agent.ReviewBeliefOlderThan(Windows);
+					}
+                    
+					var path = ThePathfinder.PathFind(agent.CurrentPosition, targetPos);
 
                     /* BENCHMARK */
                     UpdateSRD();
@@ -380,7 +396,7 @@ public class PathfindTester : MonoBehaviour
     /// </summary>
     /// <param name="path">The input path.</param>
     /// <returns>A list representation of the path.</returns>
-    private static List<MapSquare> Path2MapSquareList(Path<MapSquare> path)
+    public static List<MapSquare> Path2MapSquareList(Path<MapSquare> path)
     {
         //TODO: Move to Path.
         var pathList = new List<MapSquare>(path);
@@ -422,7 +438,8 @@ public class PathfindTester : MonoBehaviour
     private void InitializeSRD(MapSquare currentPos, MapSquare targetPos)
     {
         var p = ThePathfinder.TheMightyOmniscientAndPerfectPathfinder(currentPos, targetPos);
-        srd = new SingleRunData { StartingPoint = currentPos.ToString(), TargetPoint = targetPos.ToString(), RealPathExists = p!=null};
+		var popo = SimpleHOmniscient.FindPath(currentPos,targetPos);
+		srd = new SingleRunData { StartingPoint = currentPos.ToString(), TargetPoint = targetPos.ToString(), RealPathExists = p!=null , OmniscientEffort = popo};
     }
 
     /// <summary>
@@ -496,16 +513,15 @@ public class PathfindTester : MonoBehaviour
         Debug.Log(string.Format("[REVISION] Portal belief revision for {0} to {1}", currentPos, targetPos));
 #endif
         Path<MapSquare> path = null;
-        var t = 10.0f;
-        //const float Tmin = 11.0f;
-        while (path == null && t > TMin)
-        {
-            Debug.Log(string.Format("[REVISION] Open portals older than {0}", t));
-            agent.ReviewBeliefOlderThan(t);
-            path = ThePathfinder.PathFind(currentPos, targetPos);
-            t--;
-        }
 
+		long currentWindows = Windows;
+
+		while (currentWindows >= MinWindows && path == null) {
+			Debug.Log (string.Format ("[REVISION] Open portals older than {0}", currentWindows));
+			agent.ReviewBeliefOlderThan (currentWindows);
+			path = ThePathfinder.PathFind (currentPos, targetPos);
+			currentWindows--;
+		}
         return path;
     }
 
@@ -638,6 +654,7 @@ public class PathfindTester : MonoBehaviour
                 currentHighLevelPos, 
                 nextHighLevelPos, 
                 BDPMap.Instance.GetArea(currentHighLevelPos));
+			srd.ExploredNodes += AStar.ExpandedNodes;
             if (path == null)
             {
                 Debug.Log("[HIGH-LEVEL-PATH] No low level path.");

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Linq;
 
 using UnityEngine;
@@ -46,9 +46,9 @@ public class AgentEntity
         this.agentBelief.ResetBelieves();
     }
 
-    public void ReviewBeliefOlderThan(float timeinterval)
+    public void ReviewBeliefOlderThan(long stepWindow)
     {
-        this.agentBelief.OpenOldPortals(timeinterval);
+        this.agentBelief.OpenOldPortals(stepWindow);
     }
 
     public bool UpdateBelief(MapSquare ms, bool state)
