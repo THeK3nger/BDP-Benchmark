@@ -1,6 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// This class representa "Fixed Total Random" random strategy.
+/// </summary>
+/// According to this strategy, there is a fixed amount of portal opened/closed.
 [RequireComponent(typeof(PathfindTester))]
 public sealed class FixedTotalRandom : IPortalsRandomStrategy {
 

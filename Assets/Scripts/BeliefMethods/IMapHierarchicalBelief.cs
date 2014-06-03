@@ -1,8 +1,6 @@
-using UnityEngine;
-using System.Collections;
-
+/// <summary>
+/// Interface fo hierachical believes.
+/// </summary>
 public interface IMapHierarchicalBelief : IMapBelief {
-
-    //Path<MapSquare> ExpandPath(Path<MapSquare> path);
     void OpenOldPortals(long timeLimit);
 }

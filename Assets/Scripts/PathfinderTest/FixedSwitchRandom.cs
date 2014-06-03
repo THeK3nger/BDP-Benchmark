@@ -111,11 +111,19 @@ public class FixedSwitchRandom : IPortalsRandomStrategy
         return this.ScrambleAmount;
     }
 
+	/// <summary>
+	/// Sets the randomness.
+	/// </summary>
+	/// <param name="value">Value.</param>
     public override void SetRandomness(float value)
     {
         StartingClosedAmount = value;
     }
 
+	/// <summary>
+	/// Sets the scramble amount.
+	/// </summary>
+	/// <param name="value">Value.</param>
     public override void SetScrambleAmount(float value)
     {
         ScrambleAmount = value;

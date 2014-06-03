@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 
 /// <summary>
-/// The h vertex based.
+/// This class represents a hierarchical vertex-based BDP.
 /// </summary>
 public class HVertexBased : MonoBehaviour, IMapHierarchicalBelief
 {

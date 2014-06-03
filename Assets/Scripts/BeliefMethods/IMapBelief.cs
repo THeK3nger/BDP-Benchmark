@@ -6,14 +6,7 @@
 //   The MapBelief interface.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-
-
-using System.Collections;
-
 using RoomOfRequirement;
-
-using UnityEngine;
 
 /// <summary>
 /// The MapBelief interface.

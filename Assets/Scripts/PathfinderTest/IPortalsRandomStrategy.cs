@@ -1,6 +1,11 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// This class represent a portal random strategy.
+/// </summary>
+/// A random portal strategy is the algorithm used when the BDP tester
+/// ask for a randomization of the world portal.
 public abstract class IPortalsRandomStrategy : MonoBehaviour {
 
     /// <summary>

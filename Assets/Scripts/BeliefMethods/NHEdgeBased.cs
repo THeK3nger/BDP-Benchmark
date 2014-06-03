@@ -1,7 +1,9 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// This class represents a non-hierarchical edge based BDP approach.
+/// </summary>
 public class NHEdgeBased : MonoBehaviour, IMapBelief {
 
 	public bool Hierarchical {get { return false; } }

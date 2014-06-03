@@ -144,6 +144,10 @@ public class Map2D
         return elementsList.IndexOf(element) != -1;
     }
 
+	/// <summary>
+	/// Iterate ove every map square.
+	/// </summary>
+	/// <returns>The squares.</returns>
     public IEnumerable<MapSquare> MapSquares()
     {
         for (var x = 0; x < this.Width; x++)
