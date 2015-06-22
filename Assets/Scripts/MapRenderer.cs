@@ -54,9 +54,11 @@ public class MapRenderer : MonoSingleton<MapRenderer>
         meshRenderer = GetComponent<MeshRenderer>();
         KeepDrawing = true;
         meshFilter.mesh = CreateMapCanvas();
-        texture = new Texture2D(BDPMap.Instance.Width, BDPMap.Instance.Height, TextureFormat.ARGB32, false);
-        texture.filterMode = FilterMode.Point;
-        meshRenderer.material.mainTexture = this.texture;
+        texture = new Texture2D(BDPMap.Instance.Width, BDPMap.Instance.Height, TextureFormat.ARGB32, false)
+                      {
+                          filterMode = FilterMode.Point
+                      };
+        meshRenderer.material.mainTexture = texture;
         StartCoroutine(DrawCallback());
     }
 
@@ -72,10 +74,7 @@ public class MapRenderer : MonoSingleton<MapRenderer>
             for (var y = 0; y < BDPMap.Instance.Height; y++)
             {
                 var currentArea = BDPMap.Instance.GetArea(x, y);
-                if (currentArea == 0)
-                {
-                    continue;
-                }
+                if (currentArea == 0) continue;
 
                 Color choosenColor;
                 if (areaColor.ContainsKey(currentArea))
@@ -89,7 +88,7 @@ public class MapRenderer : MonoSingleton<MapRenderer>
                     choosenColor = AreaColors[currentColor];
                 }
 
-                texture.SetPixel(x, BDPMap.Instance.Height - y, choosenColor);
+                texture.SetPixel(x, BDPMap.Instance.Height - y - 1, choosenColor);
             }
         }
         texture.Apply();
@@ -107,11 +106,11 @@ public class MapRenderer : MonoSingleton<MapRenderer>
             {
                 if (!BDPMap.Instance.IsFree(x, y))
                 {
-                    this.texture.SetPixel(x,BDPMap.Instance.Height - y,Color.black);
+                    texture.SetPixel(x,BDPMap.Instance.Height - y - 1,Color.black);
                 }
             }
         }
-        this.texture.Apply();
+        texture.Apply();
 
     }
 
@@ -148,35 +147,35 @@ public class MapRenderer : MonoSingleton<MapRenderer>
                 continue;
             }
 
-            this.DrawAreaMap();
-            this.DrawMap();
+            DrawAreaMap();
+            DrawMap();
         }
     }
 
     private Mesh CreateMapCanvas() {
-        Mesh mesh = new Mesh();
+        var mesh = new Mesh();
         // Setup vertices
-		Vector3[] newVertices = new Vector3[4];
-        float halfHeight = BDPMap.Instance.Height * 0.5f;
-        float halfWidth = BDPMap.Instance.Width * 0.5f;
-		newVertices [0] = new Vector3 (-halfWidth, -halfHeight, 0);
-		newVertices [1] = new Vector3 (-halfWidth, halfHeight, 0);
-		newVertices [2] = new Vector3 (halfWidth, -halfHeight, 0);
-		newVertices [3] = new Vector3 (halfWidth, halfHeight, 0);
+		var newVertices = new Vector3[4];
+        var height = BDPMap.Instance.Height;
+        var width = BDPMap.Instance.Width;
+		newVertices [0] = new Vector3 (0, 0, 0);
+		newVertices [1] = new Vector3 (0, height, 0);
+		newVertices [2] = new Vector3 (width, 0, 0);
+		newVertices [3] = new Vector3 (width, height, 0);
 
         // Setup UVs
-        Vector2[] newUVs = new Vector2[newVertices.Length];
+        var newUVs = new Vector2[newVertices.Length];
         newUVs[0] = new Vector2(0, 0);
         newUVs[1] = new Vector2(0, 1);
         newUVs[2] = new Vector2(1, 0);
         newUVs[3] = new Vector2(1, 1);
 
         // Setup triangles
-        int[] newTriangles = new int[] { 0, 1, 2, 3, 2, 1 };
+        var newTriangles = new[] { 0, 1, 2, 3, 2, 1 };
 
         // Setup normals
-        Vector3[] newNormals = new Vector3[newVertices.Length];
-        for (int i = 0; i < newNormals.Length; i++) {
+        var newNormals = new Vector3[newVertices.Length];
+        for (var i = 0; i < newNormals.Length; i++) {
             newNormals[i] = Vector3.forward;
         }
 
