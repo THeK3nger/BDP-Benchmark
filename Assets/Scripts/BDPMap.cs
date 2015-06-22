@@ -254,7 +254,10 @@ public class BDPMap : MonoSingleton<BDPMap>
         LoadMapFromFile();
         MapPartitioning();
         ConnectivityGraph();
+		Debug.LogWarning ("GATES: " + PortalConnectivity.Vertices.Count ());
+        GetComponent<MapRenderer>().StartRenderer();
         MapIsLoaded = true;
+         
     }
 
     /// <summary>

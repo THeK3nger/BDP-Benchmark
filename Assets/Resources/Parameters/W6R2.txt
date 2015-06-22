@@ -1,0 +1,10 @@
+scramble_rate=1
+number_of_runs=500
+seed=150
+update_radius=2
+valid_revision_limit=6
+minimal_windows=6
+cache=1
+scramble_amount=0.1
+initial_randomness=0.2
+

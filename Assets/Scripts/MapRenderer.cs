@@ -31,26 +31,32 @@ public class MapRenderer : MonoSingleton<MapRenderer>
     public Vector2 Origin;
 
     /// <summary>
-    /// The canvas tilemap.
-    /// </summary>
-    public tk2dTileMap Tilemap;
-
-    /// <summary>
     /// Gets or sets a value indicating whether keep drawing.
     /// </summary>
     public bool KeepDrawing { get; set; }
+
+    public List<Color> AreaColors = new List<Color>();
+
+    private MeshFilter meshFilter;
+    private MeshRenderer meshRenderer;
+    private Texture2D texture;
 
     /// <summary>
     /// The start.
     /// </summary>
     public void Start() 
     {
-        if (Tilemap == null) 
-        {
-            Debug.LogError("TileMap is not set in the inspector!");
-        }
 
+    }
+
+    public void StartRenderer() {
+        meshFilter = GetComponent<MeshFilter>();
+        meshRenderer = GetComponent<MeshRenderer>();
         KeepDrawing = true;
+        meshFilter.mesh = CreateMapCanvas();
+        texture = new Texture2D(BDPMap.Instance.Width, BDPMap.Instance.Height, TextureFormat.ARGB32, false);
+        texture.filterMode = FilterMode.Point;
+        meshRenderer.material.mainTexture = this.texture;
         StartCoroutine(DrawCallback());
     }
 
@@ -59,7 +65,7 @@ public class MapRenderer : MonoSingleton<MapRenderer>
     /// </summary>
     public void DrawAreaMap()
     {
-        var currentColor = 1;
+        var currentColor = 0;
         var areaColor = new Dictionary<int, int>();
         for (var x = 0; x < BDPMap.Instance.Width; x++)
         {
@@ -71,20 +77,23 @@ public class MapRenderer : MonoSingleton<MapRenderer>
                     continue;
                 }
 
+                Color choosenColor;
                 if (areaColor.ContainsKey(currentArea))
                 {
-                    Tilemap.SetTile(x, BDPMap.Instance.Height - y, 0, areaColor[currentArea]);
+                    choosenColor = AreaColors[areaColor[currentArea]];
                 }
                 else
                 {
-                    areaColor.Add(currentArea, currentColor + 1);
-                    currentColor = (currentColor + 1) % 5;
-                    Tilemap.SetTile(x, BDPMap.Instance.Height - y, 0, areaColor[currentArea]);
+                    areaColor.Add(currentArea, currentColor);
+                    currentColor = (currentColor + 1) % AreaColors.Count;
+                    choosenColor = AreaColors[currentColor];
                 }
+
+                texture.SetPixel(x, BDPMap.Instance.Height - y, choosenColor);
             }
         }
+        texture.Apply();
 
-        Tilemap.Build();
     }
 
     /// <summary>
@@ -98,12 +107,12 @@ public class MapRenderer : MonoSingleton<MapRenderer>
             {
                 if (!BDPMap.Instance.IsFree(x, y))
                 {
-                    Tilemap.SetTile(x, BDPMap.Instance.Height - y, 0, 0);
+                    this.texture.SetPixel(x,BDPMap.Instance.Height - y,Color.black);
                 }
             }
         }
+        this.texture.Apply();
 
-        Tilemap.Build();
     }
 
     /// <summary>
@@ -142,5 +151,41 @@ public class MapRenderer : MonoSingleton<MapRenderer>
             this.DrawAreaMap();
             this.DrawMap();
         }
+    }
+
+    private Mesh CreateMapCanvas() {
+        Mesh mesh = new Mesh();
+        // Setup vertices
+		Vector3[] newVertices = new Vector3[4];
+        float halfHeight = BDPMap.Instance.Height * 0.5f;
+        float halfWidth = BDPMap.Instance.Width * 0.5f;
+		newVertices [0] = new Vector3 (-halfWidth, -halfHeight, 0);
+		newVertices [1] = new Vector3 (-halfWidth, halfHeight, 0);
+		newVertices [2] = new Vector3 (halfWidth, -halfHeight, 0);
+		newVertices [3] = new Vector3 (halfWidth, halfHeight, 0);
+
+        // Setup UVs
+        Vector2[] newUVs = new Vector2[newVertices.Length];
+        newUVs[0] = new Vector2(0, 0);
+        newUVs[1] = new Vector2(0, 1);
+        newUVs[2] = new Vector2(1, 0);
+        newUVs[3] = new Vector2(1, 1);
+
+        // Setup triangles
+        int[] newTriangles = new int[] { 0, 1, 2, 3, 2, 1 };
+
+        // Setup normals
+        Vector3[] newNormals = new Vector3[newVertices.Length];
+        for (int i = 0; i < newNormals.Length; i++) {
+            newNormals[i] = Vector3.forward;
+        }
+
+        // Create quad
+        mesh.vertices = newVertices;
+        mesh.uv = newUVs;
+        mesh.triangles = newTriangles;
+        mesh.normals = newNormals;
+
+        return mesh;
     }
 }
