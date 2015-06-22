@@ -34,6 +34,6 @@ public class AgentPositioning : MonoBehaviour
     public void Update()
     {
         var coord = MapRenderer.Instance.Grid2Cartesian(GridPosition);
-        transform.position = new Vector3(coord.x, coord.y, 0);
+        transform.position = new Vector3(coord.x+0.5f, coord.y+0.5f, 0);
     }
 }

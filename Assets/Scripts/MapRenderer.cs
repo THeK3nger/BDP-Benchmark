@@ -21,16 +21,6 @@ using UnityEngine;
 public class MapRenderer : MonoSingleton<MapRenderer>
 {
     /// <summary>
-    /// The size of a grid square;
-    /// </summary>
-    public float CellSize;
-
-    /// <summary>
-    /// The origin of the grid;
-    /// </summary>
-    public Vector2 Origin;
-
-    /// <summary>
     /// Gets or sets a value indicating whether keep drawing.
     /// </summary>
     public bool KeepDrawing { get; set; }
@@ -125,9 +115,10 @@ public class MapRenderer : MonoSingleton<MapRenderer>
     /// </returns>
     public Vector2 Grid2Cartesian(MapSquare ms)
     {
+        const float TileSize = 2.0f;
         var fixedy = BDPMap.Instance.Height - ms.y;
-        var x = Origin.x + ((1.0f + ms.x) * 0.5f * CellSize);
-        var y = Origin.y + ((1.0f + fixedy) * 0.5f * CellSize);
+        var x = ms.x * 0.5f * TileSize;
+        var y = fixedy * 0.5f * TileSize;
         return new Vector2(x, y);
     }
 

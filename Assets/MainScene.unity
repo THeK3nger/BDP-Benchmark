@@ -263,8 +263,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   IsGameStatic: 0
-  CellSize: 3.20000005
-  Origin: {x: 0, y: 0}
   AreaColors:
   - {r: 1, g: 0, b: 0, a: 1}
   - {r: 0, g: 0, b: 1, a: 1}
@@ -508,7 +506,7 @@ Transform:
   m_GameObject: {fileID: 1085951238}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 16.3573723, y: 44.7271652, z: 0}
-  m_LocalScale: {x: .5, y: .5, z: 1}
+  m_LocalScale: {x: .300000012, y: .300000012, z: 1}
   m_Children: []
   m_Father: {fileID: 1652677452}
   m_RootOrder: 0
@@ -700,7 +698,7 @@ Transform:
   m_GameObject: {fileID: 1304969386}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 33.2758789, y: 36.1329308, z: 0}
-  m_LocalScale: {x: .5, y: .5, z: 1}
+  m_LocalScale: {x: .300000012, y: .300000012, z: 1}
   m_Children: []
   m_Father: {fileID: 1652677452}
   m_RootOrder: 1

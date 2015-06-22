@@ -271,7 +271,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </returns>
     public List<PortalGroup> GetAdjacentPortalGropus(PortalGroup pg)
     {
-        return this.PortalConnectivity.GetNeighbours(pg);
+        return PortalConnectivity.GetNeighbours(pg);
     }
 
     /// <summary>
@@ -321,7 +321,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </param>
     public List<PortalGroup> GetPortalGroupByAreas(int area)
     {
-        return this.PortalConnectivity.Vertices.Where(pg => pg.BelongTo(area)).ToList();
+        return PortalConnectivity.Vertices.Where(pg => pg.BelongTo(area)).ToList();
     }
 
     /// <summary>
@@ -338,7 +338,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </param>
     public List<PortalGroup> GetPortalGroupByAreas(int area1, int area2)
     {
-        return this.PortalConnectivity.Vertices.Where(pg => pg.Connect(area1, area2)).ToList();
+        return PortalConnectivity.Vertices.Where(pg => pg.Connect(area1, area2)).ToList();
     }
 
     /// <summary>
@@ -352,7 +352,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     /// </param>
     public List<PortalGroup> GetPortalGroupBySquare(MapSquare ms)
     {
-        return this.reversePortalDict.ContainsKey(ms) ? this.reversePortalDict[ms] : null;
+        return reversePortalDict.ContainsKey(ms) ? this.reversePortalDict[ms] : null;
     }
 
     /// <summary>
@@ -455,7 +455,7 @@ public class BDPMap : MonoSingleton<BDPMap>
     public void LoadMapFromFile()
     {
         // Load text file from TextAsset.
-        string mapString = MapFile.text;
+        var mapString = MapFile.text;
         rawMap = BDP.Map.MapParser.ParseMapFromString(mapString);
     }
 
@@ -482,7 +482,7 @@ public class BDPMap : MonoSingleton<BDPMap>
         for (var y = ms.y - range; y < ms.y + range; y++)
         {
             result += y + " ";
-            for (int x = ms.x - range; x < ms.x + range; x++)
+            for (var x = ms.x - range; x < ms.x + range; x++)
             {
                 if (IsFree(x, y))
                 {

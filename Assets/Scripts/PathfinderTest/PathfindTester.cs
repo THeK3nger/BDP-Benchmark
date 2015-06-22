@@ -7,7 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-#define PATHTESTER_DEBUG_LOG
+//#define PATHTESTER_DEBUG_LOG
 
 using System;
 using System.Collections;
@@ -126,14 +126,6 @@ public class PathfindTester : MonoBehaviour
 
 	public string CurrentParam;
 
-#if PATHTESTER_DEBUG_LOG
-
-    /// <summary>
-    /// The my logger.
-    /// </summary>
-    private readonly BasicLogger myLogger = new BasicLogger("PATHTEST");
-#endif
-
     /// <summary>
     /// Gets the map number.
     /// </summary>
@@ -168,9 +160,9 @@ public class PathfindTester : MonoBehaviour
     /// </summary>
     private void Start()
     {
-        agent = new AgentEntity(this.ThePathfinder.AgentBelief as HVertexBased);
+        agent = new AgentEntity(ThePathfinder.AgentBelief as HVertexBased);
         RandomStrategy = GetComponent<IPortalsRandomStrategy>();
-        StartCoroutine(this.MetaLoop());
+        StartCoroutine(MetaLoop());
     }
 
     public IEnumerator MetaLoop()
@@ -264,7 +256,7 @@ public class PathfindTester : MonoBehaviour
             BDPMap.Instance.MapFile = txa;
             BDPMap.Instance.ComputeMap();
 
-            var bd = new BenchmarkData(this) { TMin = this.Windows };
+            var bd = new BenchmarkData(this) { TMin = Windows };
 
             while (!BDPMap.Instance.MapIsLoaded)
             {
@@ -362,7 +354,7 @@ public class PathfindTester : MonoBehaviour
                     /* ********* */
                     var pathList = Path2MapSquareList(path);
 
-                    Debug.Log("[MAINLOOP] Path Found. Start Execution.");
+                    //Debug.Log("[MAINLOOP] Path Found. Start Execution.");
                     if (ThePathfinder.AgentBelief.Hierarchical)
                     {
                         yield return StartCoroutine(ExecuteHierarchicalPath(pathList));
